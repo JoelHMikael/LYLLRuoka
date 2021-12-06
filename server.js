@@ -72,7 +72,10 @@ function openFile(path)
 async function buildMain(args)
 {
 	const path = args["path"];
-	const index = args["query"].index.toUpperCase().replaceAll(".", "").replaceAll(" ", "");
+	const query = args["query"];
+	let index;
+	if (typeof query.index === "string")
+		index = query.index.toUpperCase().replaceAll(".", "").replaceAll(" ", "");
 	const shifts = args["shifts"];
 	const DB = args["db"];
 
