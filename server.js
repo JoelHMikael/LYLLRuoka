@@ -24,7 +24,8 @@ async function init()
 	const errorPath = "./404/index.html";
 
 	let shiftcont = await openFile("./shifts.txt");
-	const DB = await parse.build(shiftcont.toString("utf-8"));
+	shiftcont = shiftcont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
+	const DB = await parse.build(shiftcont);
 
 	async function server(req, res)
 	{
@@ -96,8 +97,7 @@ async function buildMain(args)
 	if (res === undefined)
 		res = parse.get(day, index, DB);
 	if (res === -1)
-		res = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!";
-
+		res = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!"; // it's the frickin \r in the database!
 	data_string = data_string.replace("\\(result\\)", res);
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
 	
