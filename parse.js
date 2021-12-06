@@ -3,7 +3,6 @@
 	let db = []; // first level array: days - second level array: shifts - third level dict: course/teacher - fourth level array: indexes
 	while (db.length < weekdays.length)
 	{
-		console.log("\nParsing weekday " + weekdays[db.length] + ";");
 		i = findExpression(data, weekdays[db.length], i);
 		let end = i;
 		if (db.length === weekdays.length)
@@ -16,7 +15,6 @@
 
 		do
 		{
-			console.log("Parsing shift " + (shifts + 1) + ";");
 			let teachers = [];
 			let courses = [];
 			i = findExpression(data, "RUOKAILUVUORO", i);
@@ -30,12 +28,10 @@
 				nextLineStart = getNextChar(data, i + 1, "\n");
 			}
 			let parsedLine = data.substring(i, nextLineStart).replaceAll(",", "").replaceAll("ja ", "");
-			console.log(parsedLine);
 			let parse_i = 0;
 			let nextSpace = getNextChar(parsedLine, parse_i, " ");
 			while (parse_i !== -1)
 			{
-				//console.log("Parsing the courses / teachers.");
 				courses.push(parsedLine.substring(parse_i, nextSpace));
 				parse_i = nextSpace + 1;
 				nextSpace = getNextChar(parsedLine, parse_i, " ");
@@ -116,7 +112,7 @@ function parseLine(line, toRemove = " ja KAHDEN TUTKINNON OPINNOT 1., 2. ja 3. V
 
 	if (line.substring(line.length - toRemove.length, line.length) === toRemove)
 		line = line.substring(0, line.length - toRemove.length);
-	line = line.replaceAll(",", "");
+	line = line.replaceAll(",", "").replaceAll("ja ", "");
 
 	const getElement = list =>
 	{
@@ -182,19 +178,35 @@ function parseShift(data, weekdays = ["MAANANTAISIN", "TIISTAISIN", "KESKIVIIKKO
 
 /*
  * DB structure:
- * WEEKDAY
- * 	FOOD SHIFTS
- * 		COURSE INDEXES
- * 		TEACHER INDEXES
+ * list
+ * WEEKDAY - list
+ * 	FOOD SHIFTS - dict
+ * 		COURSE INDEXES - list
+ * 		TEACHER INDEXES - list
  */
 
-function getShift(day, index, db)
+function getShift(day, index, db) // day: int, 1 = monday; index: string of course/teacher; db: parsed shifts
 {
-	let shifts = db[day];
+	if ((typeof day !== "number") || isNaN(day) || (typeof index !== "string"))
+		return -1;
+
+	let shifts = db[day - 1];
+
+	let _endOfIndex = parseInt(index.substring(2, 4));
+	let is_teacher = _endOfIndex.toString() !== index.substring(2, 4);
+	let is_course = !is_teacher;
+
 	for (const [key, val] of Object.entries(shifts))
 	{
+		let indexes = val[+is_teacher];
+		for (let i = 0; i < indexes.length; i++)
+		{
+			if (indexes[i] === index)
+				return key;
+		}
 	}
+	return -1;
 }
 
-exports.shift	= parseShift;
+exports.build	= parseShift;
 exports.get 	= getShift;

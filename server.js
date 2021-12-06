@@ -4,7 +4,7 @@ const url	= require("url");
 const parse	= require("./parse.js");
 
 
-function init()
+async function init()
 {
 	const weekdays = [undefined, "MAANANTAI", "TIISTAI", "KESKIVIIKKO", "TORSTAI", "PERJANTAI", undefined];
 
@@ -23,9 +23,12 @@ function init()
 	};
 	const errorPath = "./404/index.html";
 
+	let shiftcont = await openFile("./shifts.txt");
+	const DB = await parse.build(shiftcont.toString("utf-8"));
+
 	async function server(req, res)
 	{
-		let q = url.parse(req.url, true); //true?
+		let q = url.parse(req.url, true);
 		let path = "." + q.pathname;
 		if (path == "./")
 			path = "./index.html";
@@ -34,16 +37,15 @@ function init()
 		const args = {
 			"path": path,
 			"query": q.query,
-			"shifts": shifts
+			"shifts": shifts,
+			"db": DB
 		};
-		try
+		if (typeof build[path] === "function")
 		{
 			data = await build[path](args);
 		}
-		catch (error)
+		else
 		{
-			if (!(error instanceof TypeError))
-				console.log("ERROR!!! " + error);
 			data = await build404(errorPath, q.pathname);
 		}
 		res.write(data);
@@ -70,14 +72,27 @@ function openFile(path)
 async function buildMain(args)
 {
 	const path = args["path"];
-	const query = args["query"];
+	const index = args["query"].index.toUpperCase().replaceAll(".", "").replaceAll(" ", "");
 	const shifts = args["shifts"];
+	const DB = args["db"];
 
 	const data = await openFile(path);
 	const data_string = data.toString("utf-8");
-	if (query.index === undefined)
-		return data_string.replace("\\(result\\)", "");
-	return data_string.replace("\\(result\\)", shifts[parseshift(query) - 1]);
+	let res;
+
+	const d = new Date();
+	const day = d.getDay();
+
+	if ((day === 0) || (day === 6))
+		res = `Maanantain ruoka: ${parse.get(day, query.index, DB)}`;
+	if ((index === undefined) || (index === ""))
+		res = "";
+	if (res === undefined)
+		res = parse.get(day, index, DB);
+	if (res === -1)
+		res = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!";
+
+	return data_string.replace("\\(result\\)", res);
 }
 
 async function build404(path, attemptpath)
