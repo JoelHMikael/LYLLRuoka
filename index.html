@@ -9,10 +9,21 @@
 		<h1>Food-app</h1>
 		<p>\(result\)</p>
 		<form method="GET">
-			<label for="index">Abbreviation of teacher or course:</label>
+			<label for="index">Opettaja / kurssi:</label>
 			<br>
 			<input type="text" name="index" placeholder="sahe // ÄI1.2">
 			<br>
+			<label for="day">Päivä:</label>
+			<br>
+			<select name="day">
+				<option value="1">ma</option>
+				<option value="2">ti</option>
+				<option value="3">ke</option>
+				<option value="4">to</option>
+				<option value="5">pe</option>
+				<option value="6" disabled>la</option>
+				<option value="0" disabled>su</option>
+			</select>
 			<input type="submit">
 		</form>
 	</body>

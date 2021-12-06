@@ -80,11 +80,14 @@ async function buildMain(args)
 	const DB = args["db"];
 
 	const data = await openFile(path);
-	const data_string = data.toString("utf-8");
-	let res;
+	let data_string = data.toString("utf-8");
 
+	let res;
 	const d = new Date();
-	const day = d.getDay();
+	let day = d.getDay();
+
+	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 7))
+		day = parseInt(query.day);
 
 	if ((day === 0) || (day === 6))
 		res = `Maanantain ruoka: ${parse.get(day, query.index, DB)}`;
@@ -95,7 +98,10 @@ async function buildMain(args)
 	if (res === -1)
 		res = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!";
 
-	return data_string.replace("\\(result\\)", res);
+	data_string = data_string.replace("\\(result\\)", res);
+	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
+	
+	return data_string;
 }
 
 async function build404(path, attemptpath)
