@@ -8,15 +8,6 @@ async function init()
 {
 	const weekdays = [undefined, "MAANANTAI", "TIISTAI", "KESKIVIIKKO", "TORSTAI", "PERJANTAI", undefined];
 
-	const shifts = [
-		//1:
-		"Ruokailuvuoro 1",
-		//2:
-		"Ruokailuvuoro 2",
-		//3:
-		"Ruokailuvuoro 3"
-	];
-
 	const build = {
 		"./index.html": buildMain,
 		"./index.css": buildDefault,
@@ -39,7 +30,6 @@ async function init()
 		const args = {
 			"path": path,
 			"query": q.query,
-			"shifts": shifts,
 			"db": DB
 		};
 		if (typeof build[path] === "function")
@@ -78,7 +68,6 @@ async function buildMain(args)
 	let index;
 	if (typeof query.index === "string")
 		index = query.index.toUpperCase().replaceAll(".", "").replaceAll(" ", "");
-	const shifts = args["shifts"];
 	const DB = args["db"];
 
 	const data = await openFile(path);
@@ -101,6 +90,12 @@ async function buildMain(args)
 		res = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!"; // it's the frickin \r in the database!
 	data_string = data_string.replace("\\(result\\)", res);
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
+
+	day = ["su", "ma", "ti", "ke", "to", "pe", "la"][day];
+	if (res !== "")
+		data_string = data_string.replace("\\(foodshift-header\\)", `Kurssin (???)/(???) ruokailuvuoro ${day}:`);
+	else
+		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
 	return data_string;
 }
