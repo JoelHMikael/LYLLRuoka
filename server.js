@@ -20,6 +20,7 @@ async function init()
 	const build = {
 		"./index.html": buildMain,
 		"./index.css": buildDefault,
+		"./404/index.css": buildDefault
 	};
 	const errorPath = "./404/index.html";
 

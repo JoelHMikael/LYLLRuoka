@@ -1,4 +1,62 @@
+* {
+	margin: 0;
+	padding: 0;
+	text-align: center;
+}
+
 body {
-	background: black;
+	background: #444;
 	color: white;
+	padding: 1em;
+
+	font-family: Verdana, sans-serif;
+	text-shadow: .125em .125em black;
+}
+
+#foodshift, #food {
+	width: 100%;
+	box-sizing: border-box;
+	display: inline-block;
+	vertical-align: top;
+}
+
+@media screen and (min-width: 700px)
+{
+	#foodshift, #food {
+		width: 49%;
+	}
+}
+
+.float-block {
+	display: inline-block;
+	margin: 1em;
+	padding: 1em;
+
+	background: #222;
+	border: 0 solid black;
+	border-radius: 5px;
+}
+
+.float-block p, .float-block h1, .float-block h2, .float-block label, .float-block select, .float-block input {
+	margin: .5em;
+}
+
+#send {
+	background: blue;
+	padding: .5em;
+	margin: .5em;
+	border: 1px solid black;
+	border-radius: 5px;
+	font-weight: bold;
+
+	position: relative;
+	right: .125em;
+	bottom: .125em;
+	box-shadow: .125em .125em;
+}
+
+#send:hover {
+	right: .25em;
+	bottom: .25em;
+	box-shadow: .25em .25em;
 }
