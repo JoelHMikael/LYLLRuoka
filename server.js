@@ -69,34 +69,35 @@ async function buildMain(args)
 	if (typeof query.index === "string")
 		index = query.index.toUpperCase().replaceAll(".", "").replaceAll(" ", "");
 	const DB = args["db"];
-
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
 
-	let res;
+	let res = {};
+
 	const d = new Date();
 	let day = d.getDay();
-
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 7))
 		day = parseInt(query.day);
-
-	if ((day === 0) || (day === 6))
-		res = `Maanantain ruoka: ${parse.get(day, query.index, DB)}`;
-	if ((index === undefined) || (index === ""))
-		res = "";
-	if (res === undefined)
-		res = parse.get(day, index, DB);
-	if (res === -1)
-		res = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!"; // it's the frickin \r in the database!
-	data_string = data_string.replace("\\(result\\)", res);
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
 
-	day = ["su", "ma", "ti", "ke", "to", "pe", "la"][day];
-	if (res !== "")
-		data_string = data_string.replace("\\(foodshift-header\\)", `Kurssin (???)/(???) ruokailuvuoro ${day}:`);
-	else
+	// get the food shift to res["shift"]
+	res["shift"] = undefined;
+	if ((day === 0) || (day === 6))
+		res["shift"] = `Maanantain ruoka: ${parse.get(day, query.index, DB)}`;
+	if ((index === undefined) || (index === ""))
+		res["shift"] = "";
+	if (res["shift"] === undefined)
+		res["shift"] = parse.get(day, index, DB);
+	if (res["shift"] === -1)
+		res["shift"] = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!";
+
+	// get the day
+	res["foodshift-header"] = `Kurssin (???)/(???) ruokailuvuoro ${["su", "ma", "ti", "ke", "to", "pe", "la"][day]}:`
+	if (res["shift"] === "")
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
+	data_string = build_replace(data_string, res);
+
 	return data_string;
 }
 
@@ -114,9 +115,17 @@ async function buildDefault(args)
 	return data.toString("utf-8");
 }
 
-function parseshift(index)
+
+function build_replace(s, dict)
 {
-	return 1; // placeholder glue
+	console.log(dict);
+	for (const [key, val] of Object.entries(dict))
+	{
+		console.log(`\\(${key}\\)`);
+		s = s.replaceAll(`\\(${key}\\)`, val);
+	}
+
+	return s;
 }
 
 
