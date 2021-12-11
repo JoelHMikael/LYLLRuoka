@@ -15,9 +15,12 @@ async function init()
 	};
 	const errorPath = "./404/index.html";
 
-	let shiftcont = await openFile("./shifts.txt");
-	shiftcont = shiftcont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
-	const DB = await parse.build(shiftcont);
+	let shiftCont = await openFile("./shifts.txt");
+	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
+	let classCont = await openFile("./classes.txt");
+	classCont = classCont.toString("utf-8").replaceAll("\r", "");
+	let DB = parse.build(shiftCont);
+	parse.classes(classCont, DB);
 
 	async function server(req, res)
 	{
@@ -67,7 +70,7 @@ async function buildMain(args)
 	const query = args["query"];
 	let index;
 	if (typeof query.index === "string")
-		index = query.index.toUpperCase().replaceAll(".", "").replaceAll(" ", "");
+		index = parse.cluttered(query.index);
 	const DB = args["db"];
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
@@ -76,23 +79,46 @@ async function buildMain(args)
 
 	const d = new Date();
 	let day = d.getDay();
+	day = +((day === 0) || (day === 6)) + (+(!(day === 0) && !(day === 6)) * day);
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 7))
 		day = parseInt(query.day);
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
 
 	// get the food shift to res["shift"]
+	const indexTypes = {
+		"course": "Kurssin",
+		"teacher": "Opettajan",
+		"class": "Luokan"
+	};
 	res["shift"] = undefined;
-	if ((day === 0) || (day === 6))
-		res["shift"] = `Maanantain ruoka: ${parse.get(day, query.index, DB)}`;
 	if ((index === undefined) || (index === ""))
 		res["shift"] = "";
 	if (res["shift"] === undefined)
-		res["shift"] = parse.get(day, index, DB);
+	{
+		let shift = parse.get(day, index, DB);
+		let key = Object.keys(shift)[0];
+		if (key !== undefined)
+		{
+			res["shift"] = key;
+			res["shift-header"] = `${shift[key][0]}/${shift[key][1]}`;
+			if (shift[key][2] !== undefined)
+				res["shift-header"] += `/${shift[key][2]}`
+			res["index-type"] = "Kurssin";
+		}
+		else
+		{
+			res["shift"] = -1;
+			res["shift-header"] = `${index}`;
+			res["index-type"] = indexTypes[parse.indexType(index)];
+			if (res["index-type"] === undefined)
+				res["index-type"] = "";
+		}
+	}
 	if (res["shift"] === -1)
-		res["shift"] = "Kyseiselle kurssille/opettajalle ei löydy ruokailua päivältä!";
+		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
 
 	// get the day
-	res["foodshift-header"] = `Kurssin (???)/(???) ruokailuvuoro ${["su", "ma", "ti", "ke", "to", "pe", "la"][day]}:`
+	res["day"] = ["su", "ma", "ti", "ke", "to", "pe", "la"][day];
 	if (res["shift"] === "")
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
@@ -118,10 +144,8 @@ async function buildDefault(args)
 
 function build_replace(s, dict)
 {
-	console.log(dict);
 	for (const [key, val] of Object.entries(dict))
 	{
-		console.log(`\\(${key}\\)`);
 		s = s.replaceAll(`\\(${key}\\)`, val);
 	}
 

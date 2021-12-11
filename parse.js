@@ -103,6 +103,43 @@ function findExpression(data, expr, start = 0)
 	return start;
 }
 
+function parseCluttered(s)
+{
+	return s.replaceAll(".", "").replaceAll(" ", "").toUpperCase();
+}
+
+function parseClasses(classData, DB)
+{
+	classData = parseCluttered(classData) + "\n"; // newline so that loop can find last value
+	// parse data to dict
+	let classes = {};
+	let i = 0;
+	while (i < classData.length)
+	{
+		let separator = getNextChar(classData, ":", i);
+		let lineEnd = getNextChar(classData, "\n", i);
+		let key = classData.substring(i, separator);
+		let val = classData.substring(separator + 1, lineEnd);
+		i = lineEnd + 1;
+		classes[key] = val;
+	}
+
+	for (let day = 0; day < DB.length; day++)
+	{
+		let shifts = DB[day];
+		for (const [key, val] of Object.entries(shifts))
+		{
+			DB[day][key].push([]);
+			let indexes = val[0]; // use courses: the classes are paired to them and they are unique with a higher probability
+			for (let i = 0; i < indexes.length; i++)
+			{
+				DB[day][key][2].push(classes[indexes[i]]);
+			}
+		}
+	}
+
+}
+
 function parseLine(line, toRemove = " ja KAHDEN TUTKINNON OPINNOT 1., 2. ja 3. VUOSITASON RYHMÄT ")
 {
 	let i = 0;
@@ -112,7 +149,24 @@ function parseLine(line, toRemove = " ja KAHDEN TUTKINNON OPINNOT 1., 2. ja 3. V
 
 	if (line.substring(line.length - toRemove.length, line.length) === toRemove)
 		line = line.substring(0, line.length - toRemove.length);
-	line = line.replaceAll(",", "").replaceAll("ja ", "");
+	line = line.replaceAll(",", "").replaceAll("ja ", "").replaceAll(" + ", "+");
+
+	while (i < line.length)
+	{
+		if (line[i] === "+")
+		{
+
+			nextSpace = getNextChar(line, " ", i);
+			let nextNextSpace = getNextChar(line, " ", nextSpace + 1);
+			if (nextNextSpace === -1)
+				nextNextSpace = line.length;
+			line = `${line.substring(0, i)} ${line.substring(nextSpace + 1, nextNextSpace)} ${line.substring(i + 1, line.length)}`;
+			i = nextNextSpace - 1;
+		}
+		i++;
+	}
+	nextSpace = 0;
+	i = 0;
 
 	const getElement = list =>
 	{
@@ -178,12 +232,22 @@ function parseShift(data, weekdays = ["MAANANTAISIN", "TIISTAISIN", "KESKIVIIKKO
 
 /*
  * DB structure:
- * list
  * WEEKDAY - list
  * 	FOOD SHIFTS - dict
  * 		COURSE INDEXES - list
  * 		TEACHER INDEXES - list
+ * 	maybe:	CLASSES - list
  */
+
+function getIndexType(index)
+{
+	if (/^[A-Za-zåäöÅÄÖ]{2,3}\d{2,3}$/.test(index))
+		return "course";
+	if (/^[A-Za-zåäöÅÄÖ]{4}$/.test(index))
+		return "teacher";
+	if (/^\w\d{3}$/.test(index))
+		return "class";
+}
 
 function getShift(day, index, db) // day: int, 1 = monday; index: string of course/teacher; db: parsed shifts
 {
@@ -193,20 +257,26 @@ function getShift(day, index, db) // day: int, 1 = monday; index: string of cour
 	let shifts = db[day - 1];
 
 	let _endOfIndex = parseInt(index.substring(2, 4));
-	let is_teacher = _endOfIndex.toString() !== index.substring(2, 4);
-	let is_course = !is_teacher;
+	let type = getIndexType(index);
+	if (type === undefined)
+		return {};
+	let type_index = +(type === "teacher") + (+(type === "class") * 2);
 
+	let res = {};
 	for (const [key, val] of Object.entries(shifts))
 	{
-		let indexes = val[+is_teacher];
+		let indexes = val[type_index];
 		for (let i = 0; i < indexes.length; i++)
 		{
 			if (indexes[i] === index)
-				return key;
+				res[key] = [val[0][i], val[1][i], val[2][i]];
 		}
 	}
-	return -1;
+	return res;
 }
 
 exports.build	= parseShift;
+exports.indexType = getIndexType;
+exports.classes = parseClasses;
 exports.get 	= getShift;
+exports.cluttered = parseCluttered;

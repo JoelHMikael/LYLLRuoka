@@ -22,8 +22,12 @@ body {
 
 @media screen and (min-width: 700px)
 {
-	#foodshift, #food {
-		width: 49%;
+	#foodshift
+	{
+		width: 58%;
+	}
+	#food {
+		width: 41%;
 	}
 }
 
