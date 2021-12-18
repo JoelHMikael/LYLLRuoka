@@ -2,6 +2,7 @@ const http	= require("http");
 const fs	= require("fs");
 const url	= require("url");
 const parse	= require("./parse.js");
+const scrape	= require("./scrape.js");
 
 
 async function init()
@@ -15,13 +16,24 @@ async function init()
 	};
 	const errorPath = "./404/index.html";
 
-	let shiftCont = await openFile("./shifts.txt");
+	// await for needed things in async
+	let [shiftCont, classCont, foodsThisWeek, foodsNextWeek] = await Promise.all([
+		openFile("./shifts.txt"),
+		openFile("./classes.txt"),
+		scrape.food(scrape.link(1)),
+		scrape.food(scrape.link(2))
+	]);
+
+	// get the food shift "database"
 	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
-	let classCont = await openFile("./classes.txt");
 	classCont = classCont.toString("utf-8").replaceAll("\r", "");
 	let DB = parse.build(shiftCont);
 	parse.classes(classCont, DB);
 
+	// get the food "database"
+	const foods = [foodsThisWeek, foodsNextWeek];
+
+	// server code
 	async function server(req, res)
 	{
 		let q = url.parse(req.url, true);
@@ -33,21 +45,21 @@ async function init()
 		const args = {
 			"path": path,
 			"query": q.query,
-			"db": DB
+			"db": DB,
+			"foods": foods
 		};
+
 		if (typeof build[path] === "function")
-		{
 			data = await build[path](args);
-		}
 		else
-		{
 			data = await build404(errorPath, q.pathname);
-		}
+
 		res.write(data);
 		res.end();
 	}
 
-	http.createServer(server).listen(8080);
+	// start server
+	http.createServer(server).listen(80);
 }
 
 
@@ -68,6 +80,8 @@ async function buildMain(args)
 {
 	const path = args["path"];
 	const query = args["query"];
+	console.log(query);
+	const foods = args["foods"];
 	let index;
 	if (typeof query.index === "string")
 		index = parse.cluttered(query.index);
@@ -79,6 +93,7 @@ async function buildMain(args)
 
 	const d = new Date();
 	let day = d.getDay();
+	const actualDay = day;
 	day = +((day === 0) || (day === 6)) + (+(!(day === 0) && !(day === 6)) * day);
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 7))
 		day = parseInt(query.day);
@@ -118,10 +133,26 @@ async function buildMain(args)
 		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
 
 	// get the day
-	res["day"] = ["su", "ma", "ti", "ke", "to", "pe", "la"][day];
+	let weekdays = ["su", "ma", "ti", "ke", "to", "pe", "la"];
+	res["day"] = weekdays[day];
 	if (res["shift"] === "")
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
+	// get the food
+	let food;
+	food = foods[ +(day < actualDay) ][day]; // test this out more
+	if (food !== undefined)
+	{
+		res["food-header"] = food[0];
+		res["food"] = food[1];
+	}
+	else
+	{
+		res["food-header"] = weekdays[day];
+		res["food"] = "Päivälle ei löytynyt ruokaa";
+	}
+	res["food-header"] = `Päivän ${res["food-header"]} kouluruoka:`;
+
 	data_string = build_replace(data_string, res);
 
 	return data_string;

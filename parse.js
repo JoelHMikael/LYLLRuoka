@@ -94,6 +94,8 @@ function getToLineStartingWith(s, ss, start = 0)
 
 function findExpression(data, expr, start = 0)
 {
+	if (start == -1)
+		return -1;
 	if (!(Number.isInteger(start) && (start >= 0)))
 		throw new TypeError("Start must be a positive integer!");
 	while ((data.substring(start, start + expr.length) !== expr) && (start + expr.length < data.length))
@@ -105,7 +107,7 @@ function findExpression(data, expr, start = 0)
 
 function parseCluttered(s)
 {
-	return s.replaceAll(".", "").replaceAll(" ", "").toUpperCase();
+	return s.replaceAll(".", "").replaceAll(" ", "").replaceAll("<", "(").replaceAll(">", ")").toUpperCase();
 }
 
 function parseClasses(classData, DB)
@@ -280,3 +282,4 @@ exports.indexType = getIndexType;
 exports.classes = parseClasses;
 exports.get 	= getShift;
 exports.cluttered = parseCluttered;
+exports.find = findExpression;
