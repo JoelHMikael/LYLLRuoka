@@ -59,7 +59,7 @@ async function init()
 	}
 
 	// start server
-	http.createServer(server).listen(80);
+	http.createServer(server).listen(8080);
 }
 
 
