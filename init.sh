@@ -1,4 +1,4 @@
 #!/bin/sh
-cd /home/joel/FoodJS
+cd /home/joel
 git clone "https://github.com/JoelHMikael/FoodJS.git" >> /tmp/test.txt
-node ./server.js
+node ./FoodJS/server.js
