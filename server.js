@@ -80,7 +80,6 @@ async function buildMain(args)
 {
 	const path = args["path"];
 	const query = args["query"];
-	console.log(query);
 	const foods = args["foods"];
 	let index;
 	if (typeof query.index === "string")
