@@ -87,6 +87,7 @@ function openFile(path)
 
 async function buildMain(args)
 {
+	// get the passed arguments
 	const path = args["path"];
 	const query = args["query"];
 	const foods = args["foods"];
@@ -97,14 +98,18 @@ async function buildMain(args)
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
 
+	// here are the things to replace in the html page
 	let res = {};
 
+	// get valid day
 	const d = new Date();
 	let day = d.getDay();
-	const actualDay = day;
-	day = +((day === 0) || (day === 6)) + (+(!(day === 0) && !(day === 6)) * day);
-	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 7))
+	let actualDay = day;
+	day = +((day === 0) || (day === 6)) + (+(!(day === 0) && !(day === 6)) * day); // clamp the day between monday (1) and friday (5) (inclusive)
+	// make the day the passed day instead if the passed day is valid
+	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 6))
 		day = parseInt(query.day);
+	// set the day selected (must be done manually with this replacement system)
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
 
 	// get the food shift to res["shift"]
@@ -147,6 +152,8 @@ async function buildMain(args)
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
 	// get the food
+	day += (day === 0) * 7;
+	actualDay += (actualDay === 0) * 7;
 	let food;
 	food = foods[ +(day < actualDay) ][day]; // test this out more
 	if (food !== undefined)
@@ -159,7 +166,7 @@ async function buildMain(args)
 		res["food-header"] = weekdays[day];
 		res["food"] = "Päivälle ei löytynyt ruokaa";
 	}
-	res["food-header"] = `Päivän ${res["food-header"]} kouluruoka:`;
+	res["food-header"] = `Kouluruoka ${res["food-header"]}:`;
 
 	data_string = build_replace(data_string, res);
 
