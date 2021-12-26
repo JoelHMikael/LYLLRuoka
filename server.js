@@ -1,4 +1,5 @@
-const http	= require("http");
+//const http	= require("http");
+const https	= require("https");
 const fs	= require("fs");
 const url	= require("url");
 const parse	= require("./parse.js");
@@ -17,12 +18,20 @@ async function init()
 	const errorPath = "./404/index.html";
 
 	// await for needed things in async
-	let [shiftCont, classCont, foodsThisWeek, foodsNextWeek] = await Promise.all([
+	let [shiftCont, classCont, foodsThisWeek, foodsNextWeek/*, httpsKey, httpsCert*/] = await Promise.all([
 		openFile("./shifts.txt"),
 		openFile("./classes.txt"),
 		scrape.food(scrape.link(1)),
-		scrape.food(scrape.link(2))
+		scrape.food(scrape.link(2)),
+		//openFile("../Certificate/key.pem"),
+		//openFile("../Certificate/cert.pem")
 	]);
+
+	// https options, you need to get a certificate in the file ../Certificate for the server to work
+	const httpsOpts = {
+		key: fs.readFileSync("../Certificate/key.pem"),//httpsKey,
+		cert: fs.readFileSync("../Certificate/cert.pem")//httpsCert
+	};
 
 	// get the food shift "database"
 	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
@@ -59,7 +68,7 @@ async function init()
 	}
 
 	// start server
-	http.createServer(server).listen(8080);
+	https.createServer(httpsOpts, server).listen(8080);
 }
 
 
