@@ -1,5 +1,5 @@
 # Food-app
-This is a site under development that tells you when your lesson is, when your lunch break is and what the school lunch of the day is.
+Readme coming soon!
 
 ## Setup
-You can add a link to this site to your startup folder to always get to know when your lunch break is when you turn on your computer in school.
+If you want to set up the server, you will have to get a SSL certificate or generate one yourself. If you want to run a dedicated server that can update, you also need to add the cron jobs from crontab\_add.

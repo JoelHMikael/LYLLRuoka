@@ -2,17 +2,26 @@
 	margin: 0;
 	padding: 0;
 	text-align: center;
+	--info-width: 10em;
+	--fadetime: .3s;
+	--box-bg: #222;
+	--box-shadow: black;
 }
 
+/*** bg etc... ***/
 body {
 	background: #444;
 	color: white;
 	padding: 1em;
 
-	font-family: Verdana, sans-serif;
-	text-shadow: .125em .125em black;
+	font-family: verdana, sans-serif;
 }
 
+.shadow {
+	text-shadow: .124em .125em black;
+}
+
+/*** dual layout ***/
 #foodshift, #food {
 	width: 100%;
 	box-sizing: border-box;
@@ -20,6 +29,7 @@ body {
 	vertical-align: top;
 }
 
+/*** responsivity ***/
 @media screen and (min-width: 700px)
 {
 	#foodshift
@@ -31,12 +41,13 @@ body {
 	}
 }
 
+/*** the ui blocks ***/
 .float-block {
 	display: inline-block;
 	margin: 1em;
 	padding: 1em;
 
-	background: #222;
+	background: var(--box-bg);
 	border: 0 solid black;
 	border-radius: 5px;
 }
@@ -45,22 +56,93 @@ body {
 	margin: .5em;
 }
 
+/*** the send-button ***/
 #send {
 	background: blue;
 	padding: .5em;
 	margin: .5em;
-	border: 1px solid black;
-	border-radius: 5px;
 	font-weight: bold;
 
 	position: relative;
 	right: .125em;
 	bottom: .125em;
-	box-shadow: .125em .125em;
 }
 
 #send:hover {
 	right: .25em;
 	bottom: .25em;
 	box-shadow: .25em .25em;
+}
+
+/*** The shadowed elements ***/
+.highlight {
+	border: 1px solid black;
+	border-radius: 5px;
+	box-shadow: .125em .125em var(--box-shadow);
+}
+
+/*** the info buttons & their animations ***/
+img.info {
+	width: 1em;
+	height: 1em;
+	vertical-align: middle;
+}
+
+img.info ~ span {
+	position: relative;
+	vertical-align: middle;
+	left: -1em;
+	animation: hide-at-start calc(var(--fadetime) * 1.1); /* this hides the flash of the child element in the start */
+}
+@keyframes hide-at-start {
+	0% { bottom: 200vh; }
+	99%{ bottom: 200vh; }
+	100%{ bottom: 0; }
+}
+
+p.infoblock {
+	display: inline;
+	position: absolute;
+	top: .5em;
+	left: 1.5em;
+
+	background-color: var(--box-bg);
+	--box-shadow: #111;
+	margin: 0;
+	padding: .5em;
+	border-radius: 0 5px 5px 5px;
+
+	animation-name: fade-out;
+	animation-duration: var(--fadetime);
+	visibility: hidden;
+	opacity: 0;
+}
+
+img.info:hover ~ span > p.infoblock {
+	animation-name: fade-in;
+	animation-duration: var(--fadetime);
+	visibility: visible;
+	opacity: 1;
+}
+
+@keyframes fade-in {
+	0% {
+		visibility: hidden;
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+		visibility: visible;
+	}
+}
+
+@keyframes fade-out {
+	0% {
+		opacity: 1;
+		visibility: visible;
+	}
+	100% {
+		opacity: 0;
+		visibility: hidden;
+	}
 }

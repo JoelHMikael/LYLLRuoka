@@ -16,9 +16,11 @@
 		<main>
 			<div id="foodshift">
 				<form method="GET" class="float-block">
-					<label for="index">Opettaja/kurssi/luokka:</label>
+					<label for="index" class="shadow">Opettaja, kurssi tai luokka:</label>
 					<br>
 					<input type="text" name="index" placeholder="sahe // ÄI1.2 // B203">
+					<img src="/help.png" class="info" alt="Siis häh?">
+					<span><p class="infoblock highlight">Syötä tähän kenttään yhdeltätoista alkavan tuntisi opettaja, kurssikoodi tai luokka. Älä syötä useampaa edellä mainituista, yksi on tarpeeksi.</p></span>
 					<br>
 					<label for="day">Päivä:</label>
 					<br>
@@ -32,13 +34,13 @@
 						<option value="0" disabled>su</option>
 					</select>
 					<br>
-					<input type="submit" id="send" value="Löydä vuoro">
+					<input type="submit" id="send" class="highlight" value="Löydä vuoro">
 				</form>
 
 				<br>
 
 				<div id="shift-result" class="float-block">
-					<h2>\(index-type\) \(shift-header\) ruokailuvuoro \(day\):</h2>
+					<h2 class="shadow">\(index-type\) \(shift-header\) ruokailuvuoro \(day\):</h2>
 					<p>\(shift\)</p>
 				</div>
 			</div>
@@ -46,7 +48,7 @@
 
 			<div id="food">
 				<div class="float-block">
-					<h2>\(food-header\)</h2>
+					<h2 class="shadow">\(food-header\)</h2>
 					<p>\(food\)</p>
 				</div>
 			</div>

@@ -12,7 +12,8 @@ async function init()
 	const build = {
 		"./index.html": buildMain,
 		"./index.css": buildDefault,
-		"./404/index.css": buildDefault
+		"./404/index.css": buildDefault,
+		"./help.png": buildImage
 	};
 	const errorPath = "./404/index.html";
 
@@ -80,7 +81,6 @@ async function buildMain(args)
 {
 	const path = args["path"];
 	const query = args["query"];
-	console.log(query);
 	const foods = args["foods"];
 	let index;
 	if (typeof query.index === "string")
@@ -170,6 +170,13 @@ async function buildDefault(args)
 	const path = args["path"];
 	const data = await openFile(path);
 	return data.toString("utf-8");
+}
+
+async function buildImage(args)
+{
+	const path = args["path"];
+	const data = await openFile(path);
+	return data;
 }
 
 
