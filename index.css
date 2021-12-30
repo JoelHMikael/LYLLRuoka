@@ -2,7 +2,7 @@
 	margin: 0;
 	padding: 0;
 	text-align: center;
-	--info-width: 10em;
+	--info-width: 13em;
 	--fadetime: .3s;
 	--box-bg: #222;
 	--box-shadow: black;
@@ -103,14 +103,16 @@ img.info ~ span {
 p.infoblock {
 	display: inline;
 	position: absolute;
-	top: .5em;
-	left: 1.5em;
+	top: 1.5em;
+	left: calc(var(--info-width) * -1 - 1em);
+	width: var(--info-width);
+	z-index: 1;
 
 	background-color: var(--box-bg);
 	--box-shadow: #111;
 	margin: 0;
 	padding: .5em;
-	border-radius: 0 5px 5px 5px;
+	border-radius: 5px 0 5px 5px;
 
 	animation-name: fade-out;
 	animation-duration: var(--fadetime);
