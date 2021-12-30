@@ -56,6 +56,11 @@ body {
 	margin: .5em;
 }
 
+/*** the input field & choose ***/
+#input[type="text"], select {
+	background-color: white;
+}
+
 /*** the send-button ***/
 #send {
 	background: blue;
@@ -74,6 +79,25 @@ body {
 	box-shadow: .25em .25em;
 }
 
+/*** Footer ***/
+footer {
+	position: fixed;
+	top: calc(100% - 3em);
+	left: 0;
+
+	width: 100%;
+	margin: 0;
+	padding: 1em;
+	line-height: 1em;
+	box-sizing: border-box;
+
+	background-color: #0d0d0d;
+}
+
+footer > a {
+	color: #b3b3b3;
+}
+
 /*** The shadowed elements ***/
 .highlight {
 	border: 1px solid black;
@@ -88,7 +112,7 @@ img.info {
 	vertical-align: middle;
 }
 
-img.info ~ span {
+img.info + span {
 	position: relative;
 	vertical-align: middle;
 	left: -1em;
@@ -120,7 +144,7 @@ p.infoblock {
 	opacity: 0;
 }
 
-img.info:hover ~ span > p.infoblock {
+img.info:hover + span > p.infoblock {
 	animation-name: fade-in;
 	animation-duration: var(--fadetime);
 	visibility: visible;
