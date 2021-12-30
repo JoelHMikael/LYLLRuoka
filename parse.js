@@ -277,9 +277,37 @@ function getShift(day, index, db) // day: int, 1 = monday; index: string of cour
 	return res;
 }
 
+function randInt(start, stop)
+{
+	return start + Math.floor(Math.random() * (stop - start));
+}
+
+function getIndexes(db, day, shift, type)
+{
+	let d = db[day];
+	let sh = Object.values(d)[shift][type];
+	return Object.values(db[day])[shift][type];
+}
+
+function getRandomIndex(db, day = randInt(0, 5), shift = randInt(0, 3), type = randInt(0, 3))
+{
+	let el;
+	let i = 0;
+	let indexes = getIndexes(db, day, shift, type);
+	while ((el === undefined) && (i < indexes.length))
+	{
+		el = indexes[i];
+		i++;
+	}
+	if (el == undefined)
+		return getRandomIndex(db);
+	return el;
+}
+
 exports.build	= parseShift;
 exports.indexType = getIndexType;
 exports.classes = parseClasses;
 exports.get 	= getShift;
 exports.cluttered = parseCluttered;
 exports.find = findExpression;
+exports.randomIndex = getRandomIndex;

@@ -132,6 +132,9 @@ async function buildMain(args)
 	if (res["shift"] === -1)
 		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
 
+	// get the example input
+	res["example-input"] = parse.randomIndex(DB, day - 1);
+
 	// get the day
 	let weekdays = ["su", "ma", "ti", "ke", "to", "pe", "la"];
 	res["day"] = weekdays[day];
