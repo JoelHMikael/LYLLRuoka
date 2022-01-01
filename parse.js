@@ -56,7 +56,9 @@ function findExpression(data, expr, start = 0)
 
 function parseCluttered(s)
 {
-	return s.replaceAll(".", "").replaceAll(" ", "").replaceAll("<", "(").replaceAll(">", ")").toUpperCase();
+	if (!(typeof s === "string"))
+		return "";
+	return s.replaceAll(".", "").replaceAll(" ", "").toUpperCase();
 }
 
 function parseClasses(classData, DB)

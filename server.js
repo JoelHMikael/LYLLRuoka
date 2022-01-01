@@ -37,24 +37,40 @@ async function init()
 	// server code
 	async function server(req, res)
 	{
+		// validate inputs
 		let q = url.parse(req.url, true);
-		let path = "." + q.pathname;
+		let ind = q.query.index;
+		if (typeof ind === "string")
+			ind = validateIndex(q.query.index.substring(0, 20));
+		else
+			ind = "";
+		let d = q.query.day;
+		if (typeof d === "string")
+			d = antiXSS(d);
+		else
+			d = "";
+		q.query = {
+			index: ind,
+			day: d
+		};
+		let path = "." + antiXSS(q.pathname);
 		if (path == "./")
 			path = "./index.html";
 
+		// pack the data required by the builders
 		let data;
 		const args = {
 			"path": path,
+			"path404": errorPath,
 			"query": q.query,
 			"db": DB,
 			"foods": foods
 		};
 
-		if (typeof build[path] === "function")
-			data = await build[path](args);
-		else
-			data = await build404(errorPath, q.pathname);
-
+		// build the page
+		const buildFound = +(typeof build[path] === "function");
+		res.writeHead([404, 200][buildFound]);
+		data = await [build404, build[path]][buildFound](args);
 		res.write(data);
 		res.end();
 	}
@@ -63,6 +79,27 @@ async function init()
 	http.createServer(server).listen(8080);
 }
 
+
+function validateIndex(sus)
+{
+	return antiXSS(parse.cluttered(sus));
+}
+
+function antiXSS(sus)
+{
+	if (!(typeof sus === "string"))
+		return "";
+	return replace(sus, ["<", ">", "(", ")"], ["&lt;", "&gt;", "&#40;", "&#41;"]);
+}
+
+function replace(s, from, to)
+{
+	for (let i = 0; i < from.length; i++)
+	{
+		s = s.replaceAll(from[i], to[i]);
+	}
+	return s;
+}
 
 function openFile(path)
 {
@@ -82,9 +119,7 @@ async function buildMain(args)
 	const path = args["path"];
 	const query = args["query"];
 	const foods = args["foods"];
-	let index;
-	if (typeof query.index === "string")
-		index = parse.cluttered(query.index);
+	const index = query.index;
 	const DB = args["db"];
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
@@ -161,11 +196,11 @@ async function buildMain(args)
 	return data_string;
 }
 
-async function build404(path, attemptpath)
+async function build404(args)
 {
-	const data = await openFile(path);
+	const data = await openFile(args["path404"]);
 	const data_string = data.toString("utf-8");
-	return data_string.replace("\\(path\\)", attemptpath);
+	return data_string.replace("\\(path\\)", args["path"]);
 }
 
 async function buildDefault(args)
