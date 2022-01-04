@@ -13,6 +13,7 @@ body {
 	background: #444;
 	color: white;
 	padding: 1em;
+	margin-bottom: 3em; /* for the footer */
 
 	font-family: verdana, sans-serif;
 }

@@ -178,7 +178,7 @@ async function buildMain(args)
 	
 	// get the food
 	let food;
-	food = foods[ +(day < actualDay) ][day]; // test this out more
+	food = foods[ +(day < actualDay) ][day];
 	if (food !== undefined)
 	{
 		res["food-header"] = food[0];
