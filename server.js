@@ -3,6 +3,7 @@ const fs	= require("fs");
 const url	= require("url");
 const parse	= require("./parse.js");
 const scrape	= require("./scrape.js");
+const mysql	= require("mysql2");
 
 
 async function init()
