@@ -1,0 +1,29 @@
+{
+  "name": "lyll-ruoka",
+  "version": "1.0.0",
+  "description": "Server to serve information about the food shifts and foods in LYLL",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoelHMikael/FoodJS.git"
+  },
+  "keywords": [
+    "food",
+    "server",
+    "database",
+    "school"
+  ],
+  "author": "Joel Kronqvist",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/JoelHMikael/FoodJS/issues"
+  },
+  "homepage": "https://github.com/JoelHMikael/FoodJS#readme",
+  "dependencies": {
+    "mysql2": "^2.3.3"
+  }
+}

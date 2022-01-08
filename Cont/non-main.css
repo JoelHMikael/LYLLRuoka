@@ -1,0 +1,26 @@
+.back {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.back > * {
+}
+
+.back > img {
+	width: 4rem;
+	height: 4rem;
+	margin: 1rem;
+	filter: drop-shadow(.125rem .125rem 0 black);
+	position: relative;
+	bottom: .125rem;
+	right: .125rem;
+	vertical-align: middle;
+	display: inline;
+}
+
+.back > img:hover {
+	filter: drop-shadow(.20rem .20rem 0 black);
+	bottom: .20rem;
+	right: .20rem;
+}

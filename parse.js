@@ -261,4 +261,5 @@ exports.classes = parseClasses;
 exports.get 	= getShift;
 exports.cluttered = parseCluttered;
 exports.find = findExpression;
+exports.getNextChar = getNextChar;
 exports.randomIndex = getRandomIndex;
