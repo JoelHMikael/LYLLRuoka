@@ -1,4 +1,7 @@
-const https = require("https"); const parse = require("./parse.js"); const fs = require("fs"); const events = require("events");
+const https = require("https");
+const parse = require("./DBPARSE.js");
+const fs = require("fs");
+const events = require("events");
 
 async function urlOpen(path)
 {
@@ -22,7 +25,7 @@ async function scrapeFood(url)
 	data = data.toString("utf-8");
 
 	let foodList = [];
-	const weekdays = ["su", "ma", "ti", "ke", "to", "pe", "la"];
+	const weekdays = ["ma", "ti", "ke", "to", "pe", "la", "su"];
 
 	let titleTags = ["<title>", "</title>"];
 	let foodTags = ["<![CDATA[", "]]>"];

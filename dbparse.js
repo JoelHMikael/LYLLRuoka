@@ -84,98 +84,7 @@ async function writeClasses(classData, DB)
 		let res = await DB.execute("INSERT INTO classes VALUES (?, ?)", [key, val]);
 	}
 }
-/*
-function parseShift(data, weekdays = ["MAANANTAISIN", "TIISTAISIN", "KESKIVIIKKOISIN", "TORSTAISIN", "PERJANTAISIN"])
-{
-	
-	let i = 0;
-	let db = [];
-	while (db.length < weekdays.length)
-	{
-		let day = [];
-		
-		i = getNextChar(data, "\n", findExpression(data, weekdays[db.length]));
-		let end;
-		if (db.length === weekdays.length - 1)
-			end = data.length;
-		else
-			end = findExpression(data, weekdays[db.length + 1]);
-		let unparsedDay = data.substring(i + 1, end);
-		day = parseDay(unparsedDay);
 
-		db.push(day);
-	}
-	return db;
-}
-
-function parseDay(day)
-{
-	let shifts = {};
-	let i = getToLineStartingWith(day, "RUOKAILUVUORO");
-	do
-	{
-		let endOfLine = getNextChar(day, "\n", i);
-		let shiftDesc = day.substring(i, endOfLine);
-		i = getNextChar(day, "\n", i) + 1;
-		i = getNextChar(day, "\n", i) + 1;
-		if (getNextChar(day, "\n", i) === -1)
-			endOfLine = day.length;
-		else
-			endOfLine = getNextChar(day, "\n", i);
-		let unparsedIndexes = day.substring(i, endOfLine);
-		shifts[shiftDesc] = parseLine(unparsedIndexes);
-		i = getToLineStartingWith(day, "RUOKAILUVUORO", i);
-	} while (i !== -1);
-	return shifts;
-}
-function parseLine(line, toRemove = " ja KAHDEN TUTKINNON OPINNOT 1., 2. ja 3. VUOSITASON RYHMÄT ")
-{
-	let i = 0;
-	let courses = [];
-	let teachers = [];
-	// get to the teachers & courses
-	let nextSpace = 0;
-
-	if (line.substring(line.length - toRemove.length, line.length) === toRemove)
-		line = line.substring(0, line.length - toRemove.length);
-	line = line.replaceAll(",", "").replaceAll("ja ", "").replaceAll(" + ", "+");
-
-	while (i < line.length)
-	{
-		if (line[i] === "+")
-		{
-
-			nextSpace = getNextChar(line, " ", i);
-			let nextNextSpace = getNextChar(line, " ", nextSpace + 1);
-			if (nextNextSpace === -1)
-				nextNextSpace = line.length;
-			line = `${line.substring(0, i)} ${line.substring(nextSpace + 1, nextNextSpace)} ${line.substring(i + 1, line.length)}`;
-			i = nextNextSpace - 1;
-		}
-		i++;
-	}
-	nextSpace = 0;
-	i = 0;
-
-	const getElement = list =>
-	{
-		nextSpace = getNextChar(line, " ", i);
-		if (nextSpace === -1)
-			nextSpace = line.length;
-		list.push(line.substring(i, nextSpace));
-		i = nextSpace + 1;
-	}
-
-	do
-	{
-		getElement(courses);
-		getElement(teachers);
-	} while (i < line.length)
-
-	return [courses, teachers];
-}
-
-*/
 async function parseLine(data, day, shift, DB)
 {
 	// "preprocessing"
@@ -285,10 +194,31 @@ async function writeShifts(data, DB)
 
 		i = end;
 	}
+
+	const courses = await DB.query_raw("SELECT * FROM classes");
+	const results = [];
+	for (let course = 0; course < courses.length; course++)
+	{
+		results.push(DB.query("UPDATE shifts SET class = ? WHERE course = ?", [courses[course].class, courses[course].course]));
+	}
+	await Promise.all(results);
 	return 0;
 }
 
-/*
+async function getShift(day, index, DB)
+{
+	let shift = DB.execute("SELECT name FROM shiftnames WHERE day = ? and id = (SELECT shift FROM shifts WHERE (day = ?) AND (course = ? OR teacher = ? OR class = ?) LIMIT 1)", [day, day, index, index, index]);
+	let additional = DB.execute("SELECT course, teacher, class FROM shifts WHERE (day = ?) AND (course = ? OR teacher = ? OR class = ?)", [day, index, index, index]);
+	[shift, additional] = await Promise.all([shift, additional]);
+	if (shift.length !== 0)
+	{
+		shift.push(additional);
+		return shift;
+	}
+	return undefined;
+}
+
+
 function getIndexType(index)
 {
 	if (/^[A-Za-zåäöÅÄÖ]{2,3}\d{2,3}$/.test(index))
@@ -299,67 +229,32 @@ function getIndexType(index)
 		return "class";
 }
 
-function getShift(day, index, db) // day: int, 1 = monday; index: string of course/teacher; db: parsed shifts
-{
-	if ((typeof day !== "number") || isNaN(day) || (typeof index !== "string"))
-		return -1;
-
-	let shifts = db[day - 1];
-
-	let _endOfIndex = parseInt(index.substring(2, 4));
-	let type = getIndexType(index);
-	if (type === undefined)
-		return {};
-	let type_index = +(type === "teacher") + (+(type === "class") * 2);
-
-	let res = {};
-	for (const [key, val] of Object.entries(shifts))
-	{
-		let indexes = val[type_index];
-		for (let i = 0; i < indexes.length; i++)
-		{
-			if (indexes[i] === index)
-				res[key] = [val[0][i], val[1][i], val[2][i]];
-		}
-	}
-	return res;
-}
-
 function randInt(start, stop)
 {
 	return start + Math.floor(Math.random() * (stop - start));
 }
 
-function getIndexes(db, day, shift, type)
+async function getRandomIndex(day, DB)
 {
-	let d = db[day];
-	let sh = Object.values(d)[shift][type];
-	return Object.values(db[day])[shift][type];
-}
-
-function getRandomIndex(db, day = randInt(0, 5), shift = randInt(0, 3), type = randInt(0, 3))
-{
-	let el;
-	let i = 0;
-	let indexes = getIndexes(db, day, shift, type);
-	while ((el === undefined) && (i < indexes.length))
+	let indexes = await DB.execute("SELECT course, teacher, class FROM shifts WHERE day = ? ORDER BY RAND() LIMIT 1", [day]);
+	indexes = Object.values(indexes[0]);
+	let start = randInt(0, indexes.length);
+	for (let test = 0; test < 3; test++)
 	{
-		el = indexes[i];
-		i++;
+		let i = (start + test) % indexes.length;
+		if (indexes[i] !== null)
+			return indexes[i];
 	}
-	if (el == undefined)
-		return getRandomIndex(db);
-	return el;
+	console.log("Warning: row without class/teacher/course in database!");
+	return getRandomIndex(day, DB);
 }
 
-exports.build	= parseShift;
+
 exports.indexType = getIndexType;
-exports.classes = parseClasses;
-exports.get 	= getShift;
 exports.cluttered = parseCluttered;
 exports.find = findExpression;
 exports.getNextChar = getNextChar;
-exports.randomIndex = getRandomIndex;*/
-
 exports.classes = writeClasses;
 exports.build = writeShifts;
+exports.get = getShift;
+exports.randomIndex = getRandomIndex;

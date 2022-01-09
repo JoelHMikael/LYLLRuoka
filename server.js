@@ -1,7 +1,6 @@
 const http	= require("http");
 const fs	= require("fs");
 const url	= require("url");
-const parse	= require("./parse.js");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
@@ -23,10 +22,11 @@ async function init()
 	};
 	const errorPath = "./Cont/404/index.html";
 
+
+
+
 	// await for needed things in async
-	let [shiftCont, classCont, foodsThisWeek, foodsNextWeek, dbcredentials] = await Promise.all([
-		openFile("./shifts.txt"),
-		openFile("./classes.txt"),
+	let [foodsThisWeek, foodsNextWeek, dbcredentials] = await Promise.all([
 		scrape.food(scrape.link(1)),
 		scrape.food(scrape.link(2)),
 		openFile("../dblogin.txt")
@@ -34,16 +34,6 @@ async function init()
 
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
-
-	// get the food shift "database"
-	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
-	classCont = classCont.toString("utf-8").replaceAll("\r", "");
-
-	await DBPARSE.classes(classCont, SQLDB);
-	await DBPARSE.build(shiftCont, SQLDB);
-
-	let DB = parse.build(shiftCont);
-	parse.classes(classCont, DB);
 
 	// get the food "database"
 	const foods = [foodsThisWeek, foodsNextWeek];
@@ -77,7 +67,6 @@ async function init()
 			"path": path,
 			"path404": errorPath,
 			"query": q.query,
-			"db": DB,
 			"foods": foods,
 			"sqldb": SQLDB
 		};
@@ -108,7 +97,7 @@ async function init()
 
 function validateIndex(sus)
 {
-	return antiXSS(parse.cluttered(sus));
+	return antiXSS(DBPARSE.cluttered(sus));
 }
 
 function antiXSS(sus)
@@ -120,7 +109,7 @@ function antiXSS(sus)
 
 function isDir(path)
 {
-	return (parse.getNextChar(path.substring(1), ".") === -1);
+	return (DBPARSE.getNextChar(path.substring(1), ".") === -1);
 }
 
 
@@ -152,7 +141,7 @@ async function buildMain(args)
 	const query = args["query"];
 	const foods = args["foods"];
 	const index = query.index;
-	const DB = args["db"];
+	const SQLDB = args["sqldb"];
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
 
@@ -160,9 +149,10 @@ async function buildMain(args)
 
 	const d = new Date();
 	let day = d.getDay();
+	day = (day + +(day === 0) * 7) - 1;
 	const actualDay = day;
-	day = +((day === 0) || (day === 6)) + (+(!(day === 0) && !(day === 6)) * day);
-	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 6))
+	day = +(!(day === 5) && !(day === 6)) * day;
+	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) >= 0) && (parseInt(query.day) < 5))
 		day = parseInt(query.day);
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
 
@@ -177,21 +167,26 @@ async function buildMain(args)
 		res["shift"] = "";
 	if (res["shift"] === undefined)
 	{
-		let shift = parse.get(day, index, DB);
-		let key = Object.keys(shift)[0];
-		if (key !== undefined)
+		let shift = await DBPARSE.get(day, index, SQLDB);
+		if (shift !== undefined)
 		{
-			res["shift"] = key;
-			res["shift-header"] = `${shift[key][0]}/${shift[key][1]}`;
-			if (shift[key][2] !== undefined)
-				res["shift-header"] += `/${shift[key][2]}`
-			res["index-type"] = "Kurssin";
+			res["shift"] = shift[0].name;
+			res["shift-header"] = "";
+			for (let i = 0; i < shift[1].length; i++)
+			{
+				res["shift-header"] += `${shift[1][i].course}/${shift[1][i].teacher}`;
+				if (shift[1][i].class !== null)
+					res["shift-header"] += `/${shift[1][i].class}`
+				if (i + 1 !== shift[1].length)
+					res["shift-header"] += " ja ";
+			}
+			res["index-type"] = ["Kurssin", "Kurssien"][+(shift[1].length > 1)];
 		}
 		else
 		{
 			res["shift"] = -1;
 			res["shift-header"] = `${index}`;
-			res["index-type"] = indexTypes[parse.indexType(index)];
+			res["index-type"] = indexTypes[DBPARSE.indexType(index)];
 			if (res["index-type"] === undefined)
 				res["index-type"] = "";
 		}
@@ -200,10 +195,10 @@ async function buildMain(args)
 		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
 
 	// get the example input
-	res["example-input"] = parse.randomIndex(DB, day - 1);
+	res["example-input"] = await DBPARSE.randomIndex(day, SQLDB);
 
 	// get the day
-	let weekdays = ["su", "ma", "ti", "ke", "to", "pe", "la"];
+	let weekdays = ["ma", "ti", "ke", "to", "pe", "la", "su"];
 	res["day"] = weekdays[day];
 	if (res["shift"] === "")
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
@@ -281,6 +276,23 @@ function build_replace(s, dict)
 	}
 
 	return s;
+}
+
+
+// Run this if you want to build the database from text files
+async function buildDB(DB)
+{
+	let [shiftCont, classCont] = await Promise.all([
+		openFile("./shifts.txt"),
+		openFile("./classes.txt")
+	]);
+	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
+	classCont = classCont.toString("utf-8").replaceAll("\r", "");
+	await Promise.all([
+		DBPARSE.classes(classCont, SQLDB),
+		DBPARSE.build(shiftCont, SQLDB)
+	]);
+	return 0;
 }
 
 

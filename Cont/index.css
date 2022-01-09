@@ -107,10 +107,16 @@ footer > a {
 }
 
 /*** the info buttons & their animations ***/
+img.info:hover {
+	filter: drop-shadow(.125rem .125rem 0 black);
+	transform: translate(-0.125rem, -0.125rem);
+}
 img.info {
 	width: 1em;
 	height: 1em;
 	vertical-align: middle;
+	filter: drop-shadow(.0625rem .0625rem 0 black);
+	transform: translate(-0.0625rem, -0.0625rem);
 }
 
 img.info + span {
