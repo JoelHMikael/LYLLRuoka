@@ -167,7 +167,7 @@ async function parseDay(data, day, DB)
 
 async function writeShifts(data, DB)
 {
-	weekdays = ["MAANANTAISIN", "TIISTAISIN", "KESKIVIIKKOISIN", "TORSTAISIN", "PERJANTAISIN"];
+	weekdays = ["MAANANTAI", "TIISTAI", "KESKIVIIKKO", "TORSTAI", "PERJANTAI"];
 	let deletions = Promise.all([
 		DB.query_raw("DELETE FROM shifts"),
 		DB.query_raw("DELETE FROM shiftnames")
@@ -178,7 +178,7 @@ async function writeShifts(data, DB)
 	for (let day = 0; day < weekdays.length; day++)
 	{
 		// find the start of the shifts of the day
-		i = getNextChar(data, "\n", findExpression(data, weekdays[day], i));
+		i = getNextChar(data, "\n", findExpression(data, weekdays[day], i)) + 1;
 
 		// find the end of the shifts of the day
 		let end = [

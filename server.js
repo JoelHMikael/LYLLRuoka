@@ -34,6 +34,7 @@ async function init()
 
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
+	buildDB(SQLDB, "./projectshifts.txt");
 
 	// get the food "database"
 	const foods = [foodsThisWeek, foodsNextWeek];
@@ -280,11 +281,11 @@ function build_replace(s, dict)
 
 
 // Run this if you want to build the database from text files
-async function buildDB(DB)
+async function buildDB(SQLDB, shiftfile = "./shifts.txt", classfile = "./classes.txt")
 {
 	let [shiftCont, classCont] = await Promise.all([
-		openFile("./shifts.txt"),
-		openFile("./classes.txt")
+		openFile(shiftfile),
+		openFile(classfile)
 	]);
 	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
 	classCont = classCont.toString("utf-8").replaceAll("\r", "");
