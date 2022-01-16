@@ -4,7 +4,7 @@ const url	= require("url");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
-const parseClasses = require("./parseClassesCsv.js").classes;
+const parseClasses = require("./parseClasses.js").classes;
 const openFile	= require("./open.js").file;
 
 
