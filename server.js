@@ -1,9 +1,11 @@
 const http	= require("http");
-const fs	= require("fs");
+//const fs	= require("fs");
 const url	= require("url");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
+const parseClasses = require("./parseClassesCsv.js").classes;
+const openFile	= require("./open.js").file;
 
 
 async function init()
@@ -34,7 +36,7 @@ async function init()
 
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
-	buildDB(SQLDB, "./projectshifts.txt");
+	//buildDB(SQLDB, "./projectshifts.txt");
 
 	// get the food "database"
 	const foods = [foodsThisWeek, foodsNextWeek];
@@ -123,18 +125,6 @@ function replace(s, from, to)
 	return s;
 }
 
-function openFile(path)
-{
-	return new Promise((resolve, reject) =>
-	{
-		fs.readFile(path, (err, data) =>
-		{
-			if (err)
-				reject(err);
-			resolve(data);
-		})
-	});
-}
 
 async function buildMain(args)
 {
@@ -290,7 +280,7 @@ async function buildDB(SQLDB, shiftfile = "./shifts.txt", classfile = "./classes
 	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
 	classCont = classCont.toString("utf-8").replaceAll("\r", "");
 	await Promise.all([
-		DBPARSE.classes(classCont, SQLDB),
+        parseClasses("./Kurssitarjottimet/2016Classes.txt", "./Kurssitarjottimet/NewClasses.txt", SQLDB),
 		DBPARSE.build(shiftCont, SQLDB)
 	]);
 	return 0;

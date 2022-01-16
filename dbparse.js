@@ -225,7 +225,7 @@ function getIndexType(index)
 		return "course";
 	if (/^[A-Za-zåäöÅÄÖ]{4}$/.test(index))
 		return "teacher";
-	if (/^\w\d{3}$/.test(index))
+	if (/^\w\d{3}R?$/.test(index))
 		return "class";
 }
 
