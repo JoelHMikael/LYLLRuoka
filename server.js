@@ -1,43 +1,49 @@
-//const http	= require("http");
+
+const http	= require("http");
 const https	= require("https");
 const fs	= require("fs");
 const url	= require("url");
-const parse	= require("./parse.js");
 const scrape	= require("./scrape.js");
+const SQL_DBS	= require("./database.js");
+const DBPARSE	= require("./dbparse.js");
+const openFile	= require("./open.js").file;
+const updateDB  = require("./update.js");
 
 
 async function init()
 {
-	const weekdays = [undefined, "MAANANTAI", "TIISTAI", "KESKIVIIKKO", "TORSTAI", "PERJANTAI", undefined];
-
 	const build = {
-		"./index.html": buildMain,
-		"./index.css": buildDefault,
-		"./404/index.css": buildDefault
+		"./Cont/index.html": buildMain,
+		"./Cont/index.css": buildDefault,
+		"./Cont/devs/index.html": buildDevs,
+		"./Cont/devs/index.css": buildDefault,
+		"./Cont/404/index.css": buildDefault,
+		"./Cont/non-main.css": buildDefault,
+		"./Cont/Images/help.png": buildImage,
+		"./Cont/Images/back.png": buildImage
 	};
-	const errorPath = "./404/index.html";
+	const errorPath = "./Cont/404/index.html";
+
+    const startDate = new Date();
+    let visitorCount = 0;
 
 	// await for needed things in async
-	let [shiftCont, classCont, foodsThisWeek, foodsNextWeek/*, httpsKey, httpsCert*/] = await Promise.all([
-		openFile("./shifts.txt"),
-		openFile("./classes.txt"),
+	let [foodsThisWeek, foodsNextWeek, dbcredentials, httpsKey, httpsCert] = await Promise.all([
 		scrape.food(scrape.link(1)),
 		scrape.food(scrape.link(2)),
-		//openFile("../Certificate/key.pem"),
-		//openFile("../Certificate/cert.pem")
+		openFile("../dblogin.txt"),
+    openFile("../Certificate/key.pem"),
+    openFile("../Certificate/cert.pem")
 	]);
-
-	// https options, you need to get a certificate in the file ../Certificate for the server to work
+  
+  // https options, you need to get a certificate in the file ../Certificate for the server to work
 	const httpsOpts = {
-		key: fs.readFileSync("../Certificate/key.pem"),//httpsKey,
-		cert: fs.readFileSync("../Certificate/cert.pem")//httpsCert
+		key: httpsKey,
+		cert: httpsCert
 	};
-
-	// get the food shift "database"
-	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
-	classCont = classCont.toString("utf-8").replaceAll("\r", "");
-	let DB = parse.build(shiftCont);
-	parse.classes(classCont, DB);
+  
+	// get the MySQL DB connection
+	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
 
 	// get the food "database"
 	const foods = [foodsThisWeek, foodsNextWeek];
@@ -45,45 +51,96 @@ async function init()
 	// server code
 	async function server(req, res)
 	{
-		let q = url.parse(req.url, true);
-		let path = "." + q.pathname;
-		if (path == "./")
-			path = "./index.html";
+        // Lightweight analytics. Don't be evil. We just want to know if anyone uses this.
+        visitorCount++;
 
+		// validate inputs
+		let q = url.parse(req.url, true);
+		let ind = q.query.index;
+		if (typeof ind === "string")
+			ind = validateIndex(q.query.index.substring(0, 20));
+		else
+			ind = "";
+		let d = q.query.day;
+		if (typeof d === "string")
+			d = antiXSS(d);
+		else
+			d = "";
+		q.query = {
+			index: ind,
+			day: d
+		};
+		let path = "./Cont" + antiXSS(q.pathname);
+		if (isDir(path))
+			path += ["/index.html", "index.html"][+(path[path.length - 1] === "/")];
+
+		// pack the data required by the builders
 		let data;
 		const args = {
 			"path": path,
+			"path404": errorPath,
 			"query": q.query,
-			"db": DB,
-			"foods": foods
+			"foods": foods,
+			"sqldb": SQLDB
 		};
 
-		if (typeof build[path] === "function")
-			data = await build[path](args);
-		else
-			data = await build404(errorPath, q.pathname);
-
+		// build the page
+		const buildFound = +(typeof build[path] === "function");
+		res.writeHead([404, 200][buildFound]);
+		data = await [build404, build[path]][buildFound](args);
 		res.write(data);
 		res.end();
 	}
 
 	// start server
-	https.createServer(httpsOpts, server).listen(8080);
+	const runningServer = http.createServer(server).listen(8080);
+	
+	// stop server
+	async function closeServer() {
+        const uptime = ((new Date()).getTime() - startDate.getTime()) / 1000;
+        console.log(`Stats:\nServer uptime: ${uptime} s\nVisitor count: ${visitorCount}\nVisitors per day: ${visitorCount / (uptime / (24 * 60 * 60))}\n\nShutting down...`);
+		await SQLDB.close();
+        console.log("MySQL closed");
+		runningServer.close();
+        console.log("Server shut down");
+        console.log("Process exiting...");
+        process.exit(0);
+	}
+	process.on("SIGINT", closeServer);
+	process.on("SIGQUIT", closeServer);
+	process.on("SIGTERM", closeServer);
 }
 
 
-function openFile(path)
+
+
+function validateIndex(sus)
 {
-	return new Promise((resolve, reject) =>
-	{
-		fs.readFile(path, (err, data) =>
-		{
-			if (err)
-				reject(err);
-			resolve(data);
-		})
-	});
+	return antiXSS(DBPARSE.cluttered(sus));
 }
+
+function antiXSS(sus)
+{
+	if (!(typeof sus === "string"))
+		return "";
+	return replace(sus, ["<", ">", "(", ")"], ["&lt;", "&gt;", "&#40;", "&#41;"]);
+}
+
+function isDir(path)
+{
+	return (DBPARSE.getNextChar(path.substring(1), ".") === -1);
+}
+
+
+function replace(s, from, to)
+{
+	for (let i = 0; i < from.length; i++)
+	{
+		s = s.replaceAll(from[i], to[i]);
+	}
+	return s;
+}
+
 
 async function buildMain(args)
 {
@@ -91,10 +148,8 @@ async function buildMain(args)
 	const path = args["path"];
 	const query = args["query"];
 	const foods = args["foods"];
-	let index;
-	if (typeof query.index === "string")
-		index = parse.cluttered(query.index);
-	const DB = args["db"];
+	const index = query.index;
+	const SQLDB = args["sqldb"];
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
 
@@ -104,10 +159,10 @@ async function buildMain(args)
 	// get valid day
 	const d = new Date();
 	let day = d.getDay();
-	let actualDay = day;
-	day = +((day === 0) || (day === 6)) + (+(!(day === 0) && !(day === 6)) * day); // clamp the day between monday (1) and friday (5) (inclusive)
-	// make the day the passed day instead if the passed day is valid
-	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) > 0) && (parseInt(query.day) < 6))
+	day = (day + +(day === 0) * 7) - 1;
+	const actualDay = day;
+	day = +(!(day === 5) && !(day === 6)) * day;
+	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) >= 0) && (parseInt(query.day) < 5))
 		day = parseInt(query.day);
 	// set the day selected (must be done manually with this replacement system)
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
@@ -123,21 +178,26 @@ async function buildMain(args)
 		res["shift"] = "";
 	if (res["shift"] === undefined)
 	{
-		let shift = parse.get(day, index, DB);
-		let key = Object.keys(shift)[0];
-		if (key !== undefined)
+		let shift = await DBPARSE.get(day, index, SQLDB);
+		if (shift !== undefined)
 		{
-			res["shift"] = key;
-			res["shift-header"] = `${shift[key][0]}/${shift[key][1]}`;
-			if (shift[key][2] !== undefined)
-				res["shift-header"] += `/${shift[key][2]}`
-			res["index-type"] = "Kurssin";
+			res["shift"] = shift[0].name;
+			res["shift-header"] = "";
+			for (let i = 0; i < shift[1].length; i++)
+			{
+				res["shift-header"] += `${shift[1][i].course}/${shift[1][i].teacher}`;
+				if (shift[1][i].class !== null)
+					res["shift-header"] += `/${shift[1][i].class}`
+				if (i + 1 !== shift[1].length)
+					res["shift-header"] += " ja ";
+			}
+			res["index-type"] = ["Kurssin", "Kurssien"][+(shift[1].length > 1)];
 		}
 		else
 		{
 			res["shift"] = -1;
 			res["shift-header"] = `${index}`;
-			res["index-type"] = indexTypes[parse.indexType(index)];
+			res["index-type"] = indexTypes[DBPARSE.indexType(index)];
 			if (res["index-type"] === undefined)
 				res["index-type"] = "";
 		}
@@ -145,8 +205,11 @@ async function buildMain(args)
 	if (res["shift"] === -1)
 		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
 
+	// get the example input
+	res["example-input"] = await DBPARSE.randomIndex(day, SQLDB);
+
 	// get the day
-	let weekdays = ["su", "ma", "ti", "ke", "to", "pe", "la"];
+	let weekdays = ["ma", "ti", "ke", "to", "pe", "la", "su"];
 	res["day"] = weekdays[day];
 	if (res["shift"] === "")
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
@@ -155,7 +218,7 @@ async function buildMain(args)
 	day += (day === 0) * 7;
 	actualDay += (actualDay === 0) * 7;
 	let food;
-	food = foods[ +(day < actualDay) ][day]; // test this out more
+	food = foods[ +(day < actualDay) ][day];
 	if (food !== undefined)
 	{
 		res["food-header"] = food[0];
@@ -173,11 +236,34 @@ async function buildMain(args)
 	return data_string;
 }
 
-async function build404(path, attemptpath)
+async function buildDevs(args)
 {
+	const path = args["path"];
 	const data = await openFile(path);
+	const DB = args["sqldb"];
+
+	let res = "";
+	let devs = await DB.query_raw("SELECT name, description, contact FROM devs");
+	for (let dev = 0; dev < devs.length; dev++)
+	{
+		let devInfo = devs[dev];
+		res += '<div class="float-block">' +
+				`<p class="column">${devInfo.name}</p>` +
+				`<p class="column">${devInfo.description}</p>` +
+				`<a href="mailto:${devInfo.contact}" class="column" style="white-space: nowrap; overflow: hidden; overflow-wrap: normal; text-overflow: ellipsis;">${devInfo.contact}</a>` +
+			'</div>';
+	}
+
+	return build_replace(data.toString("utf-8"), {"devs": res});
+}
+
+
+async function build404(args)
+{
+	args["path"] = args["path"].substring("./Cont".length);
+	const data = await openFile(args["path404"]);
 	const data_string = data.toString("utf-8");
-	return data_string.replace("\\(path\\)", attemptpath);
+	return data_string.replace("\\(path\\)", args["path"]);
 }
 
 async function buildDefault(args)
@@ -185,6 +271,13 @@ async function buildDefault(args)
 	const path = args["path"];
 	const data = await openFile(path);
 	return data.toString("utf-8");
+}
+
+async function buildImage(args)
+{
+	const path = args["path"];
+	const data = await openFile(path);
+	return data;
 }
 
 
@@ -197,6 +290,5 @@ function build_replace(s, dict)
 
 	return s;
 }
-
 
 init();

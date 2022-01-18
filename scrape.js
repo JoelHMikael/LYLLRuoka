@@ -1,4 +1,7 @@
-const https = require("https"); const parse = require("./parse.js"); const fs = require("fs"); const events = require("events");
+const https = require("https");
+const parse = require("./DBPARSE.js");
+const fs = require("fs");
+const events = require("events");
 
 async function urlOpen(path)
 {
@@ -22,7 +25,7 @@ async function scrapeFood(url)
 	data = data.toString("utf-8");
 
 	let foodList = [];
-	const weekdays = ["su", "ma", "ti", "ke", "to", "pe", "la"];
+	const weekdays = ["ma", "ti", "ke", "to", "pe", "la", "su"];
 
 	let titleTags = ["<title>", "</title>"];
 	let foodTags = ["<![CDATA[", "]]>"];
@@ -49,7 +52,7 @@ async function scrapeFood(url)
 
 		let weekdayIndex = weekdays.findIndex(val => { return val === title.substring(0, 2); });
 		if (weekdayIndex !== -1)
-			foodList[weekdayIndex] = [title, food];
+			foodList[weekdayIndex] = [title, neatify(food)];
 
 		titleSpan = getSpan(data, titleTags, foodSpan[1]);
 		foodSpan = getSpan(data, foodTags, titleSpan[1]);
@@ -61,6 +64,11 @@ async function scrapeFood(url)
 function getFoodLink(week)
 {
 	return `https://eruokalista.lohja.fi/AromieMenus/FI/Default/Lohja/Koulut/Rss.aspx?Id=97f76449-f57c-4217-aede-b5f9dbf2b41e&DateMode=${week}`;
+}
+
+function neatify(food)
+{
+	return food.replaceAll(")", ")<br>").replaceAll(" :", ":").replaceAll(":", ":<br>");
 }
 
 exports.food = scrapeFood;

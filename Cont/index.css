@@ -1,0 +1,181 @@
+* {
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	--info-width: 13em;
+	--fadetime: .3s;
+	--box-bg: #222;
+	--box-shadow: black;
+}
+
+/*** bg etc... ***/
+body {
+	background: #444;
+	color: white;
+	padding: 1em;
+	margin-bottom: 3em; /* for the footer */
+
+	font-family: verdana, sans-serif;
+}
+
+.shadow {
+	text-shadow: .124em .125em black;
+}
+
+/*** dual layout ***/
+#foodshift, #food {
+	width: 100%;
+	box-sizing: border-box;
+	display: inline-block;
+	vertical-align: top;
+}
+
+/*** responsivity ***/
+@media screen and (min-width: 700px)
+{
+	#foodshift
+	{
+		width: 58%;
+	}
+	#food {
+		width: 41%;
+	}
+}
+
+/*** the ui blocks ***/
+.float-block {
+	display: inline-block;
+	margin: 1em;
+	padding: 1em;
+
+	background: var(--box-bg);
+	border: 0 solid black;
+	border-radius: 5px;
+}
+
+.float-block p, .float-block h1, .float-block h2, .float-block label, .float-block select, .float-block input {
+	margin: .5em;
+}
+
+/*** the input field & choose ***/
+#input[type="text"], select {
+	background-color: white;
+}
+
+/*** the send-button ***/
+#send {
+	background: blue;
+	padding: .5em;
+	margin: .5em;
+	font-weight: bold;
+
+	position: relative;
+	right: .125em;
+	bottom: .125em;
+}
+
+#send:hover {
+	right: .25em;
+	bottom: .25em;
+	box-shadow: .25em .25em;
+}
+
+/*** Footer ***/
+footer {
+	position: fixed;
+	top: calc(100% - 3em);
+	left: 0;
+
+	width: 100%;
+	margin: 0;
+	padding: 1em;
+	line-height: 1em;
+	box-sizing: border-box;
+
+	background-color: #0d0d0d;
+}
+
+footer > a {
+	color: #b3b3b3;
+}
+
+/*** The shadowed elements ***/
+.highlight {
+	border: 1px solid black;
+	border-radius: 5px;
+	box-shadow: .125em .125em var(--box-shadow);
+}
+
+/*** the info buttons & their animations ***/
+img.info:hover {
+	filter: drop-shadow(.125rem .125rem 0 black);
+	transform: translate(-0.125rem, -0.125rem);
+}
+img.info {
+	width: 1em;
+	height: 1em;
+	vertical-align: middle;
+	filter: drop-shadow(.0625rem .0625rem 0 black);
+	transform: translate(-0.0625rem, -0.0625rem);
+}
+
+img.info + span {
+	position: relative;
+	vertical-align: middle;
+	left: -1em;
+	animation: hide-at-start calc(var(--fadetime) * 1.1); /* this hides the flash of the child element in the start */
+}
+@keyframes hide-at-start {
+	0% { bottom: 200vh; }
+	99%{ bottom: 200vh; }
+	100%{ bottom: 0; }
+}
+
+p.infoblock {
+	display: inline;
+	position: absolute;
+	top: 1.5em;
+	left: calc(var(--info-width) * -1 - 1em);
+	width: var(--info-width);
+	z-index: 1;
+
+	background-color: var(--box-bg);
+	--box-shadow: #111;
+	margin: 0;
+	padding: .5em;
+	border-radius: 5px 0 5px 5px;
+
+	animation-name: fade-out;
+	animation-duration: var(--fadetime);
+	visibility: hidden;
+	opacity: 0;
+}
+
+img.info:hover + span > p.infoblock {
+	animation-name: fade-in;
+	animation-duration: var(--fadetime);
+	visibility: visible;
+	opacity: 1;
+}
+
+@keyframes fade-in {
+	0% {
+		visibility: hidden;
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+		visibility: visible;
+	}
+}
+
+@keyframes fade-out {
+	0% {
+		opacity: 1;
+		visibility: visible;
+	}
+	100% {
+		opacity: 0;
+		visibility: hidden;
+	}
+}

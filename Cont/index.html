@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fi">
+	<head>
+		<meta charset="utf-8">
+		<title>LYLL-ruokailuvuoro</title>
+		<link href="/index.css" rel="stylesheet" type="text/css">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body>
+		<header>
+			<h1 class="shadow">LYLL-ruoka</h1>
+		</header>
+
+		<br>
+
+		<main>
+			<div id="foodshift">
+				<form method="GET" class="float-block">
+					<label for="index" class="shadow">Opettaja, kurssi tai luokka:</label>
+					<br>
+					<input type="text" name="index" placeholder="\(example-input\)">
+					<img src="/Images/help.png" class="info" alt="Siis häh?">
+					<span><p class="infoblock highlight">Syötä tähän kenttään yhdeltätoista alkavan tuntisi opettaja, kurssikoodi tai luokka. Älä syötä useampaa edellä mainituista, yksi on tarpeeksi.</p></span>
+					<br>
+					<label for="day">Päivä:</label>
+					<br>
+					<select name="day">
+						<option value="0">ma</option>
+						<option value="1">ti</option>
+						<option value="2">ke</option>
+						<option value="3">to</option>
+						<option value="4">pe</option>
+						<option value="5" disabled>la</option>
+						<option value="6" disabled>su</option>
+					</select>
+					<br>
+					<input type="submit" id="send" class="highlight" value="Löydä vuoro">
+				</form>
+
+				<br>
+
+				<div id="shift-result" class="float-block">
+					<h2 class="shadow">\(index-type\) \(shift-header\) ruokailuvuoro \(day\):</h2>
+					<p>\(shift\)</p>
+				</div>
+			</div>
+			
+
+			<div id="food">
+				<div class="float-block">
+					<h2 class="shadow">\(food-header\)</h2>
+					<p>\(food\)</p>
+				</div>
+			</div>
+		</main>
+
+		<footer>
+			<a href="https://www.github.com/JoelHMikael/FoodJS">Lähdekoodi</a>
+			<span>|</span>
+			<a href="/devs">Ota yhteyttä</a>
+		</footer>
+	</body>
+</html>
