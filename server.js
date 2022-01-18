@@ -1,12 +1,13 @@
+
 const http	= require("http");
-//const fs	= require("fs");
+const https	= require("https");
+const fs	= require("fs");
 const url	= require("url");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
 const openFile	= require("./open.js").file;
 const updateDB  = require("./update.js");
-const { start } = require("repl");
 
 
 async function init()
@@ -27,12 +28,20 @@ async function init()
     let visitorCount = 0;
 
 	// await for needed things in async
-	let [foodsThisWeek, foodsNextWeek, dbcredentials] = await Promise.all([
+	let [foodsThisWeek, foodsNextWeek, dbcredentials, httpsKey, httpsCert] = await Promise.all([
 		scrape.food(scrape.link(1)),
 		scrape.food(scrape.link(2)),
-		openFile("../dblogin.txt")
+		openFile("../dblogin.txt"),
+    openFile("../Certificate/key.pem"),
+    openFile("../Certificate/cert.pem")
 	]);
-
+  
+  // https options, you need to get a certificate in the file ../Certificate for the server to work
+	const httpsOpts = {
+		key: httpsKey,
+		cert: httpsCert
+	};
+  
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
 
@@ -135,6 +144,7 @@ function replace(s, from, to)
 
 async function buildMain(args)
 {
+	// get the passed arguments
 	const path = args["path"];
 	const query = args["query"];
 	const foods = args["foods"];
@@ -143,8 +153,10 @@ async function buildMain(args)
 	const data = await openFile(path);
 	let data_string = data.toString("utf-8");
 
+	// here are the things to replace in the html page
 	let res = {};
 
+	// get valid day
 	const d = new Date();
 	let day = d.getDay();
 	day = (day + +(day === 0) * 7) - 1;
@@ -152,6 +164,7 @@ async function buildMain(args)
 	day = +(!(day === 5) && !(day === 6)) * day;
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) >= 0) && (parseInt(query.day) < 5))
 		day = parseInt(query.day);
+	// set the day selected (must be done manually with this replacement system)
 	data_string = data_string.replace(`<option value=\"${day}\">`, `<option value=\"${day}\" selected>`);
 
 	// get the food shift to res["shift"]
@@ -202,6 +215,8 @@ async function buildMain(args)
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
 	// get the food
+	day += (day === 0) * 7;
+	actualDay += (actualDay === 0) * 7;
 	let food;
 	food = foods[ +(day < actualDay) ][day];
 	if (food !== undefined)
@@ -214,7 +229,7 @@ async function buildMain(args)
 		res["food-header"] = weekdays[day];
 		res["food"] = "Päivälle ei löytynyt ruokaa";
 	}
-	res["food-header"] = `Päivän ${res["food-header"]} kouluruoka:`;
+	res["food-header"] = `Kouluruoka ${res["food-header"]}:`;
 
 	data_string = build_replace(data_string, res);
 
