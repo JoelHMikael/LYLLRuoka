@@ -59,8 +59,10 @@ function addToDBFromLists(DB, l1, l2, l1cond, l2cond)
 async function parseClasses(path1, path2, DB)
 {
     let parsed = [];
+    await DB.query_raw("DELETE FROM classes");
     parsed.push(parseClassData(path1, DB));
-    parsed.push(parseClassData(path2, DB));
+    if (path2 !== undefined)
+        parsed.push(parseClassData(path2, DB));
     return await Promise.all(parsed);
 }
 

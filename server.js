@@ -4,14 +4,13 @@ const url	= require("url");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
-const parseClasses = require("./parseClasses.js").classes;
 const openFile	= require("./open.js").file;
+const updateDB  = require("./update.js");
+const { start } = require("repl");
 
 
 async function init()
 {
-	const weekdays = [undefined, "MAANANTAI", "TIISTAI", "KESKIVIIKKO", "TORSTAI", "PERJANTAI", undefined];
-
 	const build = {
 		"./Cont/index.html": buildMain,
 		"./Cont/index.css": buildDefault,
@@ -24,8 +23,8 @@ async function init()
 	};
 	const errorPath = "./Cont/404/index.html";
 
-
-
+    const startDate = new Date();
+    let visitorCount = 0;
 
 	// await for needed things in async
 	let [foodsThisWeek, foodsNextWeek, dbcredentials] = await Promise.all([
@@ -36,7 +35,6 @@ async function init()
 
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
-	//buildDB(SQLDB, "./projectshifts.txt");
 
 	// get the food "database"
 	const foods = [foodsThisWeek, foodsNextWeek];
@@ -44,6 +42,9 @@ async function init()
 	// server code
 	async function server(req, res)
 	{
+        // Lightweight analytics. Don't be evil. We just want to know if anyone uses this.
+        visitorCount++;
+
 		// validate inputs
 		let q = url.parse(req.url, true);
 		let ind = q.query.index;
@@ -86,9 +87,15 @@ async function init()
 	const runningServer = http.createServer(server).listen(8080);
 	
 	// stop server
-	function closeServer() {
-		SQLDB.close();
+	async function closeServer() {
+        const uptime = ((new Date()).getTime() - startDate.getTime()) / 1000;
+        console.log(`Stats:\nServer uptime: ${uptime} s\nVisitor count: ${visitorCount}\nVisitors per day: ${visitorCount / (uptime / (24 * 60 * 60))}\n\nShutting down...`);
+		await SQLDB.close();
+        console.log("MySQL closed");
 		runningServer.close();
+        console.log("Server shut down");
+        console.log("Process exiting...");
+        process.exit(0);
 	}
 	process.on("SIGINT", closeServer);
 	process.on("SIGQUIT", closeServer);
@@ -268,23 +275,5 @@ function build_replace(s, dict)
 
 	return s;
 }
-
-
-// Run this if you want to build the database from text files
-async function buildDB(SQLDB, shiftfile = "./shifts.txt", classfile = "./classes.txt")
-{
-	let [shiftCont, classCont] = await Promise.all([
-		openFile(shiftfile),
-		openFile(classfile)
-	]);
-	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
-	classCont = classCont.toString("utf-8").replaceAll("\r", "");
-	await Promise.all([
-        parseClasses("./Kurssitarjottimet/2016Classes.txt", "./Kurssitarjottimet/NewClasses.txt", SQLDB),
-		DBPARSE.build(shiftCont, SQLDB)
-	]);
-	return 0;
-}
-
 
 init();
