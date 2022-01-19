@@ -2,7 +2,12 @@
 Readme coming soon!
 
 ## Setup
-If you want to set up the server, you will have to get a SSL certificate or generate one yourself. If you want to run a dedicated server that can update, you also need to add the cron jobs from crontab\_add. You must create a MySQL DB and give its login info in ../dblogin.txt. The database should have the following tables set up:
+You will need a SSL certificate if you want to use https.
+You need to install node.js and MySQL (+ npm install mysql2).
+You will need to update the server with the help of the food shift message and a tab separated list of classes (just copypaste from excel from the Kurssitarjotin)
+You probably want to set up cron to run some cronjobs from crontab_add.txt.
+You need to provide the login info to the MySQL DB in ../dblogin.txt. Logging in as root was found problematic on Mint, but feel free to try if you want to.
+You should create the following tables, because the server code wont do it for you.
 
 CREATE TABLE shiftnames (
 	day INT,

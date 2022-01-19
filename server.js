@@ -32,8 +32,8 @@ async function init()
 		scrape.food(scrape.link(1)),
 		scrape.food(scrape.link(2)),
 		openFile("../dblogin.txt"),
-    openFile("../Certificate/key.pem"),
-    openFile("../Certificate/cert.pem")
+		openFile("../Certificate/key.pem"),
+		openFile("../Certificate/cert.pem")
 	]);
   
   // https options, you need to get a certificate in the file ../Certificate for the server to work
@@ -93,7 +93,7 @@ async function init()
 	}
 
 	// start server
-	const runningServer = http.createServer(server).listen(8080);
+	const runningServer = https.createServer(httpsOpts, server).listen(8080);
 	
 	// stop server
 	async function closeServer() {
@@ -160,7 +160,7 @@ async function buildMain(args)
 	const d = new Date();
 	let day = d.getDay();
 	day = (day + +(day === 0) * 7) - 1;
-	const actualDay = day;
+	const actualDay = day + (+(day === 0) * 7);
 	day = +(!(day === 5) && !(day === 6)) * day;
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) >= 0) && (parseInt(query.day) < 5))
 		day = parseInt(query.day);
@@ -216,7 +216,6 @@ async function buildMain(args)
 	
 	// get the food
 	day += (day === 0) * 7;
-	actualDay += (actualDay === 0) * 7;
 	let food;
 	food = foods[ +(day < actualDay) ][day];
 	if (food !== undefined)

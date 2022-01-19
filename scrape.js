@@ -1,5 +1,5 @@
 const https = require("https");
-const parse = require("./DBPARSE.js");
+const parse = require("./dbparse.js");
 const fs = require("fs");
 const events = require("events");
 
