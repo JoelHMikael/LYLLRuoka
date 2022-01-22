@@ -6,6 +6,7 @@ You will need a SSL certificate if you want to use https.
 You need to install node.js and MySQL (+ npm install mysql2).
 You will need to update the server with the help of the food shift message and a tab separated list of classes (just copypaste from excel from the Kurssitarjotin)
 You probably want to set up cron to run some cronjobs from crontab_add.txt.
+Also, some of the code depends on the github repo JoelHMikael/funcs, so go ahead and clone them.
 You need to provide the login info to the MySQL DB in ../dblogin.txt. Logging in as root was found problematic on Mint, but feel free to try if you want to.
 You should create the following tables, because the server code wont do it for you.
 
@@ -32,4 +33,16 @@ CREATE TABLE devs (
 	name VARCHAR(30) NOT NULL,
 	description VARCHAR(128),
 	contact VARCHAR(40)
+);
+CREATE TABLE stats (
+    start DATE PRIMARY KEY,
+    uptime INT,
+    requests INT,
+    requests_per_day INT
+);
+CREATE TABLE exams (
+	start DATE,
+	end DATE,
+	message VARCHAR(256),
+	PRIMARY KEY (start, end)
 );

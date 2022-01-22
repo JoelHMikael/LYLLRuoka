@@ -97,8 +97,19 @@ async function init()
 	
 	// stop server
 	async function closeServer() {
-        const uptime = ((new Date()).getTime() - startDate.getTime()) / 1000;
-        console.log(`Stats:\nServer uptime: ${uptime} s\nVisitor count: ${visitorCount}\nVisitors per day: ${visitorCount / (uptime / (24 * 60 * 60))}\n\nShutting down...`);
+
+		console.log("Updating stats to DB...")
+        const uptime = Math.ceil((((new Date()).getTime() - startDate.getTime()) / 1000) / (24 * 60 * 60));
+		const monthOfStart = `${startDate.getMonth() + 1}`.padStart(2, "0");
+		const monthDayOfStart = `${startDate.getDate()}`.padStart(2, "0");
+		await SQLDB.query("INSERT INTO stats VALUES (?, ?, ?, ?)", [
+			`${startDate.getFullYear()}-${monthOfStart}-${monthDayOfStart}`,
+			uptime,
+			visitorCount,
+			Math.round(visitorCount / uptime)
+		]);
+		console.log("Done. Shutting down...");
+
 		await SQLDB.close();
         console.log("MySQL closed");
 		runningServer.close();
@@ -159,8 +170,8 @@ async function buildMain(args)
 	// get valid day
 	const d = new Date();
 	let day = d.getDay();
-	day = (day + +(day === 0) * 7) - 1;
-	const actualDay = day + (+(day === 0) * 7);
+	day = (day + +(day === 0) * 7) - 1; // converts from 0 = sunday to 0 = monday
+	const actualDay = day;
 	day = +(!(day === 5) && !(day === 6)) * day;
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) >= 0) && (parseInt(query.day) < 5))
 		day = parseInt(query.day);
@@ -215,7 +226,6 @@ async function buildMain(args)
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
 	// get the food
-	day += (day === 0) * 7;
 	let food;
 	food = foods[ +(day < actualDay) ][day];
 	if (food !== undefined)
