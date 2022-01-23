@@ -1,13 +1,12 @@
-
-const http	= require("http");
+//const http	= require("http");
 const https	= require("https");
-const fs	= require("fs");
 const url	= require("url");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
 const openFile	= require("./open.js").file;
-const updateDB  = require("./update.js");
+const strFuncs	= require("./funcs/stringFuncs.js");
+const dateFuncs	= require("./funcs/dateFuncs.js");
 
 
 async function init()
@@ -215,6 +214,23 @@ async function buildMain(args)
 	}
 	if (res["shift"] === -1)
 		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
+
+	// Show message if the normal schedule isn't in place
+	const examInfo = await SQLDB.query("SELECT * FROM exams");
+	for(let week = 0; week < examInfo.length; week++)
+	{
+		if (dateFuncs.between(
+			d,
+			new Date(examInfo[week].start),
+			new Date(examInfo[week].end)
+		))
+		{
+			const message = "<div id=\"foodshift\">" +
+				`<div class="float-block">${examInfo[week].message}</div>` +
+				"</div";
+			data_string = strFuncs.replaceElement(data_string, "div id=\"foodshift\"", message);
+		}
+	}
 
 	// get the example input
 	res["example-input"] = await DBPARSE.randomIndex(day, SQLDB);
