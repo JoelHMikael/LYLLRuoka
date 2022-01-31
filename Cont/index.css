@@ -92,6 +92,9 @@ footer {
 	line-height: 1em;
 	box-sizing: border-box;
 
+	/* Don't look dumb on mobile firefox (with the lazily updating bottom search bar moving away otherwise revealing the background) */
+	padding-bottom: 5rem;
+
 	background-color: #0d0d0d;
 }
 
