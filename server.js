@@ -4,9 +4,9 @@ const url	= require("url");
 const scrape	= require("./scrape.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
-const openFile	= require("./open.js").file;
-const strFuncs	= require("./funcs/stringFuncs.js");
-const dateFuncs	= require("./funcs/dateFuncs.js");
+const openFile	= require("./Functions/open.js").file;
+const strFuncs	= require("./Functions/stringFuncs.js");
+const dateFuncs	= require("./Functions/dateFuncs.js");
 
 
 async function init()
