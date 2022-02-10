@@ -1,14 +1,35 @@
-# Food-app
-Readme coming soon!
+# Installation instructions
+Follow these steps to install everything required for the project to run.
 
-## Setup
-You will need a SSL certificate if you want to use https.
-You need to install node.js and MySQL (+ npm install mysql2).
-You will need to update the server with the help of the food shift message and a tab separated list of classes (just copypaste from excel from the Kurssitarjotin)
-You probably want to set up cron to run some cronjobs from crontab_add.txt.
-Also, some of the code depends on the github repo JoelHMikael/funcs, so go ahead and clone them.
-You need to provide the login info to the MySQL DB in ../dblogin.txt. Logging in as root was found problematic on Mint, but feel free to try if you want to.
-You should create the following tables, because the server code wont do it for you.
+## Install the FoodJS repository:
+```
+git clone "https://github.com/JoelHMikael/FoodJS.git"
+```
+
+## Install node.js
+(16.x, the one in Ubuntus package repositories is outdated)
+```
+apt install curl
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+apt-get install -y nodejs
+```
+Install npm packages required for project
+```
+npm install mysql2
+```
+
+## Install MySQL server & configure it
+```
+apt install mysql-server
+sudo mysql_secure_installation
+```
+> Note: If you want to update the databases remotely, you can allow logging in from the local network. In this case you of course have to use a strong password.
+
+## Initializing the database
+Log into mysql and run the following to initialize the tables:
+```
+CREATE DATABASE lyllruoka;
+USE lyllruoka;
 
 CREATE TABLE shiftnames (
 	day INT,
@@ -46,3 +67,14 @@ CREATE TABLE exams (
 	message VARCHAR(256),
 	PRIMARY KEY (start, end)
 );
+```
+
+## Give the server the credentials, keys & other required things
+* MySQL credentials in `../dblogin.txt`
+	* You may want to create a user for this. There has been some problems logging in as root on ubuntu, if I remember right.
+* SSL certificate in `../Certificate/key.pem` and `../Certificate/cert.pem`
+
+---
+
+# Updating the tables
+Coming soon...
