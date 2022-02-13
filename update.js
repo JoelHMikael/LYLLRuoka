@@ -1,5 +1,5 @@
 const database  = require("./database.js");
-const openFile  = require("./open.js").file;
+const openFile  = require("./Functions/open.js").file;
 const parseClasses  = require("./parseClasses.js").classes;
 const parse	= require("./dbparse.js");
 
@@ -18,4 +18,8 @@ async function buildDB(shiftfile = "./shifts.txt", classfile = "./classes.txt", 
 
 exports.update = buildDB;
 // Example call:
-// await updateDB.update("./shifts.txt", ["./Kurssitarjottimet/2016Classes.txt", "./Kurssitarjottimet/NewClasses.txt"], dbcredentials);
+/*
+const openFile = require("./Functions/open.js").file;
+const dbcredentials = openFile("../dblogin.txt");
+await updateDB.update("./shifts.txt", ["./Kurssitarjottimet/2016Classes.txt", "./Kurssitarjottimet/NewClasses.txt"], dbcredentials);
+*/

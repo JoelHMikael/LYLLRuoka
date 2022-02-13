@@ -1,4 +1,4 @@
-const open = require("./open.js");
+const open = require("./Functions/open.js");
 const parse = require("./dbparse.js");
 const fs = require("fs");
 const readline = require("readline");
