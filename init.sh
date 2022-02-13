@@ -4,10 +4,10 @@ exec 2>>/tmp/slogs
 echo | date
 echo "Init running"
 
-cd /home/joel
+cd ~
 
 echo "Removing old packages..."
-rm -r -f ./FoodJS
+rm -rf ./FoodJS
 
 echo "Waiting for connection..."
 while [ ! "$(ping 'www.github.com' -c 1)" ]
@@ -16,9 +16,8 @@ do
 done
 
 echo "Cloning new packages..."
-# Create a deployment key and save it in the default folder without passphrase to make this work:
-git clone "git@github.com:JoelHMikael/FoodJS.git"
+git clone "https://github.com/JoelHMikael/FoodJS.git"
 
 echo "Starting server..."
-cd /home/joel/FoodJS
+cd ~/FoodJS
 node ./server.js

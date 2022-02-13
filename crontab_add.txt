@@ -1,6 +1,0 @@
-# these are probably going to need some fixing, for example the shutdown path may differ
-# to normal user:
-@reboot /home/USERNAME/init.sh
-
-# to root:
-0 0 * * 7 /sbin/shutdown -r now
