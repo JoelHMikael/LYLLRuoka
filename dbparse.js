@@ -1,6 +1,3 @@
-
-
-// String searching
 function getCharAmount(s, c)
 {
 	let n = 0;
@@ -57,7 +54,7 @@ function findExpression(data, expr, start = 0)
 	return start;
 }
 
-// Normalizing
+
 function parseCluttered(s)
 {
 	if (!(typeof s === "string"))
@@ -65,145 +62,103 @@ function parseCluttered(s)
 	return s.replaceAll(".", "").replaceAll(" ", "").toUpperCase();
 }
 
-// Class parsing
-async function writeClasses(classData, DB)
+function weekdayToNumber(s)
 {
-	classData = parseCluttered(classData) + "\n"; // newline so that loop can find last value
-	await DB.query_raw("DELETE FROM classes");
-	// parse data to dict
-	let i = 0;
-	while (i < classData.length)
+	const weekdays = [
+		/ma.*/i,
+		/ti.*/i,
+		/ke.*/i,
+		/to.*/i,
+		/pe.*/i,
+		/la.*/i,
+		/su.*/i
+	];
+	for(let day = 0; day < weekdays.length; day++)
 	{
-		let separator = getNextChar(classData, ":", i);
-		if (separator === -1)
-			break;
-		let lineEnd = getNextChar(classData, "\n", i);
-		let key = classData.substring(i, separator);
-		let val = classData.substring(separator + 1, lineEnd);
-		i = lineEnd + 1;
-		let res = await DB.execute("INSERT INTO classes VALUES (?, ?)", [key, val]);
+		if (s.match(weekdays[day]))
+			return day;
 	}
-}
-
-async function parseLine(data, day, shift, DB)
-{
-	// "preprocessing"
-	let i = 0;
-	let courses = [];
-	let teachers = [];
-	const toRemove = " ja KAHDEN TUTKINNON OPINNOT 1., 2. ja 3. VUOSITASON RYHMÄT ";
-	if (data.substring(data.length - toRemove.length, data.length) === toRemove)
-		data = data.substring(0, data.length - toRemove.length);
-	data = data.replaceAll(",", "").replaceAll("ja ", "").replaceAll(" + ", "+");
-
-	while (i < data.length)
-	{
-		if (data[i] === "+")
-		{
-
-			nextSpace = getNextChar(data, " ", i);
-			let nextNextSpace = getNextChar(data, " ", nextSpace + 1);
-			if (nextNextSpace === -1)
-				nextNextSpace = data.length;
-			data = `${data.substring(0, i)} ${data.substring(nextSpace + 1, nextNextSpace)} ${data.substring(i + 1, data.length)}`;
-			i = nextNextSpace - 1;
-		}
-		i++;
-	}
-	nextSpace = 0;
-	i = 0;
-
-	const getElement = list =>
-	{
-		nextSpace = getNextChar(data, " ", i);
-		if (nextSpace === -1)
-			nextSpace = data.length;
-		list.push(data.substring(i, nextSpace));
-		i = nextSpace + 1;
-	}
-
-	do
-	{
-		getElement(courses);
-		getElement(teachers);
-	} while (i < data.length)
-
-	let values = "VALUES";
-	for(let el = 0; el < courses.length; el++)
-	{
-		values += ` ROW(${day}, ${shift}, '${courses[el]}', '${teachers[el]}', NULL),`;
-	}
-	values = values.substring(0, values.length - 1);
-	return DB.execute(`INSERT INTO shifts ${values}`, []);
-}
-
-async function parseDay(data, day, DB)
-{
-	let i = getToLineStartingWith(data, "RUOKAILUVUORO");
-	let indexOfShift = 1;
-	while (i !== -1)
-	{
-		let endOfLine = getNextChar(data, "\n", i);
-		// Insert the food shift name
-		let shiftName = DB.execute("INSERT INTO shiftnames VALUES (?, ?, ?)", [day, indexOfShift, data.substring(i, endOfLine)]);
-		// get to the teachers & courses
-		i = endOfLine + 1;
-		i = getNextChar(data, "\n", i) + 1;
-		if (getNextChar(data, "\n", i) === -1)
-			endOfLine = data.length;
-		else
-			endOfLine = getNextChar(data, "\n", i);
-		let unparsedIndexes = data.substring(i, endOfLine);
-
-		// do the magic
-		let lineParse = parseLine(unparsedIndexes, day, indexOfShift, DB);
-
-		i = getToLineStartingWith(data, "RUOKAILUVUORO", i);
-		indexOfShift++;
-		await Promise.all([shiftName, lineParse]);
-	}
-	return 0;
 }
 
 async function writeShifts(data, DB)
 {
-	weekdays = ["MAANANTAI", "TIISTAI", "KESKIVIIKKO", "TORSTAI", "PERJANTAI"];
-	let deletions = Promise.all([
+	let deletions = await Promise.all([
 		DB.query_raw("DELETE FROM shifts"),
 		DB.query_raw("DELETE FROM shiftnames")
 	]);
 
-	// iterate over the weekdays
-	let i = 0;
-	for (let day = 0; day < weekdays.length; day++)
-	{
-		// find the start of the shifts of the day
-		i = getNextChar(data, "\n", findExpression(data, weekdays[day], i)) + 1;
+	const dbOperations = [];
+	const shiftRegex = /((?:MAANANTAI|TIISTAI|KESKIVIIKKO|TORSTAI|PERJANTAI)?.*)\s*(RUOKAILU.*)\s*(.*)/gmi;
+	const shifts = data.matchAll(shiftRegex);
+	let weekday;
+	let shiftId = 1;
+	for(const shift of shifts)
+	{ 
+		if (shift[1] !== "")
+		{
+			weekday = weekdayToNumber(shift[1]);
+			shiftId = 1;
+		}
 
-		// find the end of the shifts of the day
-		let end = [
-			data.length,
-			findExpression(data, weekdays[day + 1], i)
-		][+(day !== weekdays.length - 1)];
+		dbOperations.push(
+			writeShift(weekday, shiftId, shift[2], shift[3], DB)
+		);
 
-		await deletions; // wait for deletion to get completed before proceeding to write new data to the table
-
-		// do the magic:
-		let shifts = data.substring(i, end);
-		await parseDay(shifts, day, DB);
-
-		i = end;
+		shiftId++;
 	}
 
-	const courses = await DB.query_raw("SELECT * FROM classes");
-	const results = [];
-	for (let course = 0; course < courses.length; course++)
-	{
-		results.push(DB.query("UPDATE shifts SET class = ? WHERE course = ?", [courses[course].class, courses[course].course]));
-	}
-	await Promise.all(results);
+	await dbOperations;
 	return 0;
 }
+
+async function writeShift(weekday, shiftId, shiftLine, courseLine, DB)
+{
+	const dbOperations = [];
+	// Shift names
+	dbOperations.push(
+		DB.execute(
+			"INSERT INTO shiftnames VALUE (?, ?, ?)",
+			[weekday, shiftId, shiftLine]
+		)
+	);
+
+	// Shift contents
+	const courseRegex = /(?:[a-ö]{2,3}\d{2,3} ?\+? ?)+ [a-ö]{4}/gi;
+	const courses = courseLine.matchAll(courseRegex);
+	for(const course of courses)
+	{
+		const _lastSpace = course[0].lastIndexOf(" ");
+		const courseNames = course[0].substring(0, _lastSpace).split(/ ?\+ ?/);
+		const teacherName = course[0].substring(_lastSpace + 1);
+
+		// For loop is needed, because some courses are marked like KE16+KE26 MATI
+		async function handleCourse(courseName, teacherName)
+		{
+			let className = await DB.execute(
+				"SELECT class FROM classes WHERE course=?",
+				[courseName]
+			);
+			className = className[0];
+			if (className !== undefined)
+				className = className.class;
+			else
+				className = null;
+
+			dbOperations.push(DB.execute(
+				`INSERT INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
+				[courseName, teacherName, className]
+			));
+		}
+		for(const courseName of courseNames)
+		{
+			dbOperations.push(handleCourse(courseName, teacherName));
+		}
+	}
+
+	await Promise.all(dbOperations);
+	return 0;
+}
+	
 
 async function getShift(day, index, DB)
 {
@@ -252,9 +207,8 @@ async function getRandomIndex(day, DB)
 
 exports.indexType = getIndexType;
 exports.cluttered = parseCluttered;
-exports.find = findExpression;
-exports.getNextChar = getNextChar;
-exports.classes = writeClasses;
 exports.build = writeShifts;
 exports.get = getShift;
 exports.randomIndex = getRandomIndex;
+exports.find = findExpression;
+exports.getNextChar = getNextChar;
