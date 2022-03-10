@@ -103,20 +103,20 @@ Lets assume the following filesystem that contains also all of the server code:
 ```
 shifts.txt
 Classes
-| oldclasses.txt
-| newclasses.txt
+| classes.txt
 ```
-Where shifts.txt contains the shifts, `oldclasses.txt` contains the classes of the old curriculum and `newclasses` the classes of the new learning curriculum.
+Where shifts.txt contains the shifts and `classes.txt` contains the classes.
 
-You can get the shifts from junu's food shift message through Wilma. The classes should be tab delimited text files. You can get them easily by copy-pasting them from the eg. LibreOffice from "Kurssitarjottimet". Provide only the classes of one period, not all of them.
+You can get the shifts from junu's food shift message through Wilma. The `classes` should be a tab delimited text file. You can get it easily by copy-pasting its contents from eg. LibreOffice from "Kurssitarjottimet". Provide only the classes of one period, not all of them. You can give several class files, if needed.
 
 Then just run the following code in node.js:
 ```
 const updateDB = require("./update.js");
 const openFile = require("./Functions/open.js").file;
 const dbcredentials = await openFile("../dblogin.txt");
-await updateDB.update("./shifts.txt", ["./Classes/oldclasses.txt", "./Classes/newclasses.txt"], dbcredentials);
+await updateDB.update(dbcredentials, "./shifts.txt", "./Classes/classes.txt");
 ```
+If you have several files with classes, just append them to the parameters of `updateDB.update`.
 
 ## Updating the developer table
 Updating the developer table is pretty straightforward. You just need to provide the name of the developer, a description (eg. "Improved the performance of the server") and contact information:
