@@ -126,6 +126,14 @@ await updateDB.update(dbcredentials, "./shifts.txt", "./Classes/classes.txt");
 ```
 If you have several files with classes, just append them to the parameters of `updateDB.update`.
 
+## Notifying of unusual food shifts (eg. during exams)
+Currently the notifications have to be added manually to the MySQL database. Here's an example:
+```
+USE lyllruoka;
+INSERT INTO exams VALUES ('2021-11-22', '2021-11-30', '<h2>Koeviikko</h2><br>22.11. - 30.11..<br>Kouluruokaa on tarjolla 10:45-11:30.');
+```
+The first value in the parenthesis is the start date of the notification, the second the end date of the notification and the third value is the message to display. HTML is supported. The message will override the food shift search.
+
 ## Updating the developer table
 Updating the developer table is pretty straightforward. You just need to provide the name of the developer, a description (eg. "Improved the performance of the server") and contact information:
 ```
@@ -138,6 +146,7 @@ You can make the server update itself from github. To make this work, move `~/Fo
 ```
 mv ~/FoodJS/init.sh ~/init.sh
 ```
+> Note also that `init.sh` will update the server to `~/FoodJS`. If you want to keep the server somewhere elsewhere, you will have to modify the script a little bit.
 This script should run at reboot, so next up you will have to set up some cronjobs:
 
 To your crontab:
