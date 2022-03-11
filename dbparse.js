@@ -1,3 +1,5 @@
+const weekdayToNumber = require("./Functions/dateFuncs.js").weekdayToNumber;
+
 function getCharAmount(s, c)
 {
 	let n = 0;
@@ -60,24 +62,6 @@ function parseCluttered(s)
 	if (!(typeof s === "string"))
 		return "";
 	return s.replaceAll(".", "").replaceAll(" ", "").toUpperCase();
-}
-
-function weekdayToNumber(s)
-{
-	const weekdays = [
-		/ma.*/i,
-		/ti.*/i,
-		/ke.*/i,
-		/to.*/i,
-		/pe.*/i,
-		/la.*/i,
-		/su.*/i
-	];
-	for(let day = 0; day < weekdays.length; day++)
-	{
-		if (s.match(weekdays[day]))
-			return day;
-	}
 }
 
 async function writeShifts(data, DB)

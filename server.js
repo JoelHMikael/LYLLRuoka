@@ -1,10 +1,10 @@
 //const http	= require("http");
 const https	= require("https");
 const url	= require("url");
-const scrape	= require("./scrape.js");
+const food	= require("./food.js");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
-const openFile	= require("./Functions/open.js").file;
+const open	= require("./Functions/open.js");
 const strFuncs	= require("./Functions/stringFuncs.js");
 const dateFuncs	= require("./Functions/dateFuncs.js");
 
@@ -27,14 +27,13 @@ async function init()
     let visitorCount = 0;
 
 	// await for needed things in async
-	let [foodsThisWeek, foodsNextWeek, dbcredentials, httpsKey, httpsCert] = await Promise.all([
-		scrape.food(scrape.link(1)),
-		scrape.food(scrape.link(2)),
-		openFile("../dblogin.txt"),
-		openFile("../Certificate/key.pem"),
-		openFile("../Certificate/cert.pem")
+	let [dbcredentials, httpsKey, httpsCert] = await Promise.all([
+		open.file("../dblogin.txt"),
+		open.file("../Certificate/key.pem"),
+		open.file("../Certificate/cert.pem")
 	]);
-  
+
+
   // https options, you need to get a certificate in the file ../Certificate for the server to work
 	const httpsOpts = {
 		key: httpsKey,
@@ -44,8 +43,15 @@ async function init()
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
 
-	// get the food "database"
-	const foods = [foodsThisWeek, foodsNextWeek];
+	// Add the foods to the database
+	await food.build(SQLDB);
+	setInterval(
+		() =>
+		{
+			food.build(SQLDB);
+		},
+		7 * 24 * 60 * 60 * 1000
+	);
 
 	// server code
 	async function server(req, res)
@@ -79,7 +85,6 @@ async function init()
 			"path": path,
 			"path404": errorPath,
 			"query": q.query,
-			"foods": foods,
 			"sqldb": SQLDB
 		};
 
@@ -157,10 +162,9 @@ async function buildMain(args)
 	// get the passed arguments
 	const path = args["path"];
 	const query = args["query"];
-	const foods = args["foods"];
 	const index = query.index;
 	const SQLDB = args["sqldb"];
-	const data = await openFile(path);
+	const data = await open.file(path);
 	let data_string = data.toString("utf-8");
 
 	// here are the things to replace in the html page
@@ -242,19 +246,21 @@ async function buildMain(args)
 		data_string = data_string.replace('<div id="shift-result" class="float-block">', '<div id="shift-result" class="float-block" style="display: none;">');
 	
 	// get the food
-	let food;
-	food = foods[ +(day < actualDay) ][day];
-	if (food !== undefined)
-	{
-		res["food-header"] = food[0];
-		res["food"] = food[1];
-	}
-	else
-	{
-		res["food-header"] = weekdays[day];
-		res["food"] = "Päivälle ei löytynyt ruokaa";
-	}
-	res["food-header"] = `Kouluruoka ${res["food-header"]}:`;
+	const week = +(day < actualDay) + 1; // Week = 1 if day is not past
+	const [food, vege] = await Promise.all([
+		SQLDB.execute(
+			"SELECT header, datestring, food FROM foods WHERE week=? AND day=? AND vegetarian=FALSE",
+			[week, day]
+		),
+		SQLDB.execute(
+			"SELECT header, datestring, food FROM foods WHERE week=? AND day=? AND vegetarian=TRUE",
+			[week, day]
+		)
+	]);
+	res["food-header"] = `${food[0].header} ${food[0].datestring}`;
+	res["vege-header"] = vege[0].header;
+	res["food"] = food[0].food;
+	res["vege"] = vege[0].food;
 
 	data_string = build_replace(data_string, res);
 
@@ -264,7 +270,7 @@ async function buildMain(args)
 async function buildDevs(args)
 {
 	const path = args["path"];
-	const data = await openFile(path);
+	const data = await open.file(path);
 	const DB = args["sqldb"];
 
 	let res = "";
@@ -286,7 +292,7 @@ async function buildDevs(args)
 async function build404(args)
 {
 	args["path"] = args["path"].substring("./Cont".length);
-	const data = await openFile(args["path404"]);
+	const data = await open.file(args["path404"]);
 	const data_string = data.toString("utf-8");
 	return data_string.replace("\\(path\\)", args["path"]);
 }
@@ -294,14 +300,14 @@ async function build404(args)
 async function buildDefault(args)
 {
 	const path = args["path"];
-	const data = await openFile(path);
+	const data = await open.file(path);
 	return data.toString("utf-8");
 }
 
 async function buildImage(args)
 {
 	const path = args["path"];
-	const data = await openFile(path);
+	const data = await open.file(path);
 	return data;
 }
 

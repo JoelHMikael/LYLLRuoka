@@ -68,6 +68,14 @@ CREATE TABLE exams (
 	message VARCHAR(256),
 	PRIMARY KEY (start, end)
 );
+CREATE TABLE foods (     
+    week INT,
+    day INT,
+    vegetarian TINYINT,
+    header VARCHAR(15),
+    dateString VARCHAR(13),
+    food VARCHAR(256)
+);
 ```
 > Note that if you had some information in a former database that you don't update manually, it will be lost.
 
