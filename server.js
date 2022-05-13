@@ -1,5 +1,6 @@
 //const http	= require("http");
 const https	= require("https");
+const http = require("http");
 const url	= require("url");
 const food	= require("./food.js");
 const SQL_DBS	= require("./database.js");
@@ -96,34 +97,40 @@ async function init()
 		res.end();
 	}
 
-	// start server
-	const runningServer = https.createServer(httpsOpts, server).listen(8080);
+	// start servers
+	const httpsServer = https.createServer(httpsOpts, server).listen(443);
+	const httpServer = http.createServer(server).listen(80);
 	
 	// stop server
-	async function closeServer() {
+	async function closeServers() {
 
 		console.log("Updating stats to DB...")
         const uptime = Math.ceil((((new Date()).getTime() - startDate.getTime()) / 1000) / (24 * 60 * 60));
 		const monthOfStart = `${startDate.getMonth() + 1}`.padStart(2, "0");
 		const monthDayOfStart = `${startDate.getDate()}`.padStart(2, "0");
-		await SQLDB.query("INSERT INTO stats VALUES (?, ?, ?, ?)", [
-			`${startDate.getFullYear()}-${monthOfStart}-${monthDayOfStart}`,
-			uptime,
-			visitorCount,
-			Math.round(visitorCount / uptime)
-		]);
+		try {
+			await SQLDB.query("INSERT INTO stats VALUES (?, ?, ?, ?)", [
+				`${startDate.getFullYear()}-${monthOfStart}-${monthDayOfStart}`,
+				uptime,
+				visitorCount,
+				Math.round(visitorCount / uptime)
+			]);
+		} catch(e) {
+			console.log(`\nERROR! Probably because updating the statistics several times a day is not supported, at least yet. Here's the error:\n${e}\n`);
+		}
 		console.log("Done. Shutting down...");
 
 		await SQLDB.close();
-        console.log("MySQL closed");
-		runningServer.close();
-        console.log("Server shut down");
+        console.log("MySQL connection closed");
+		httpsServer.close();
+		httpServer.close();
+        console.log("Servers shut down");
         console.log("Process exiting...");
         process.exit(0);
 	}
-	process.on("SIGINT", closeServer);
-	process.on("SIGQUIT", closeServer);
-	process.on("SIGTERM", closeServer);
+	process.on("SIGINT", closeServers);
+	process.on("SIGQUIT", closeServers);
+	process.on("SIGTERM", closeServers);
 }
 
 
