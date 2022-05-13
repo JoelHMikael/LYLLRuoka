@@ -2,7 +2,7 @@
 Follow these steps to install everything required for the project to run.
 
 ## Install the FoodJS repository
-Just clone it from github. If you want the server to be able to update itself automatically without modifying `init.sh`, you will have to do this in your home folder.
+Just clone it from github.
 ```
 git clone "https://github.com/JoelHMikael/FoodJS.git"
 ```
@@ -134,18 +134,14 @@ INSERT INTO devs (name, description, contact) VALUES ('[name]', '[description]',
 > Insert the values in the quotation marks, don't change the text before the `VALUES` keyword.
 
 # Automatic server code updates
-You can make the server update itself from github. To make this work, move `~/FoodJS/init.sh` to `~/init.sh`:
-```
-mv ~/FoodJS/init.sh ~/init.sh
-```
-This script should run at reboot, so next up you will have to set up some cronjobs:
+You can make the server update itself from github. The code that updates everything is in the FoodJS folder (top-level of repository) in the file `init.sh`. It should run at reboot and it should have the environment variable PATH_TO_LYLLRUOKA set pointing to the FoodJS folder.
 
-To your crontab:
+Add to **roots** crontab (run `sudo crontab -e`):
 ```
-@reboot ~/init.sh
-```
-To the crontab of **root** (you may have to update the shutdown path):
-```
+@reboot PATH_TO_LYLLRUOKA=[the path] [the path]/init.sh
+# For example:
+# @reboot PATH_TO_LYLLRUOKA='/home/foobar/FoodJS' /home/foobar/FoodJS/init.sh
+
 0 0 * * 7 /sbin/shutdown -r
 ```
 If you need to troubleshoot the initialization, you can find both normal and error logs in /tmp/slogs (text file)
