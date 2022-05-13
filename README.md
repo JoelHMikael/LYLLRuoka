@@ -134,7 +134,7 @@ INSERT INTO devs (name, description, contact) VALUES ('[name]', '[description]',
 > Insert the values in the quotation marks, don't change the text before the `VALUES` keyword.
 
 # Automatic server code updates
-You can make the server update itself from github. The code that updates everything is in the FoodJS folder (top-level of repository) in the file `init.sh`. It should run at reboot and it should have the environment variable PATH_TO_LYLLRUOKA set pointing to the FoodJS folder.
+You can make the server update itself from github. The code that updates everything is in the FoodJS folder (top-level of repository) in the file `init.sh`. It should run at reboot and it should have the environment variable PATH_TO_LYLLRUOKA set pointing to the FoodJS folder **without** a trailing backslash.
 
 Add to **roots** crontab (run `sudo crontab -e`):
 ```

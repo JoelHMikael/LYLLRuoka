@@ -5,7 +5,9 @@ echo | date
 echo "Init running"
 
 echo "Removing old packages..."
-rm -rf $PATH_TO_LYLLRUOKA
+rm -rf "${PATH_TO_LYLLRUOKA%%FoodJS}"
+
+cd "${PATH_TO_LYLLRUOKA%%FoodJS}"
 
 echo "Waiting for connection..."
 while [ ! "$(ping 'www.github.com' -c 1)" ]
@@ -16,6 +18,6 @@ done
 echo "Cloning new packages..."
 git clone "https://github.com/JoelHMikael/FoodJS.git"
 
-echo "Starting server..."
 cd $PATH_TO_LYLLRUOKA
+echo "Starting server..."
 node server.js
