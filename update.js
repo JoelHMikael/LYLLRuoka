@@ -6,14 +6,12 @@ const parse	= require("./dbparse.js");
 // Run this if you want to build the database from text files
 async function buildDB(dbcredentials, shiftPath, ...classfiles)
 {
-	let shiftCont = await openFile(shiftPath);
 	const DB = new database.Database(JSON.parse(dbcredentials));
-	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which creates problems
+	let shiftCont = await openFile(shiftPath);
+	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which may create problems
 
-	await Promise.all([
-        parseClasses(DB, ...classfiles),
-		parse.build(shiftCont, DB)
-	]);
+	await parseClasses(DB, ...classfiles),
+	await parse.build(shiftCont, DB)
 	return 0;
 }
 

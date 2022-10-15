@@ -35,7 +35,7 @@ async function init()
 	]);
 
 
-  // https options, you need to get a certificate in the file ../Certificate for the server to work
+    // https options, you need to get a certificate in the file ../Certificate for the server to work
 	const httpsOpts = {
 		key: httpsKey,
 		cert: httpsCert
@@ -264,10 +264,21 @@ async function buildMain(args)
 			[week, day]
 		)
 	]);
-	res["food-header"] = `${food[0].header} ${food[0].datestring}`;
-	res["vege-header"] = vege[0].header;
-	res["food"] = food[0].food;
-	res["vege"] = vege[0].food;
+
+	if (food[0] !== undefined) {
+	    res["food-header"] = `${food[0].header} ${food[0].datestring}`;
+	    res["food"] = food[0].food;
+	} else {
+	    res["food-header"] = `Kouluruoka ${weekdays[day]}`;
+	    res["food"] = "Päivän ruoka puuttuu tietokannasta.";
+	}
+	if (food[1] !== undefined)  {
+		res["vege-header"] = vege[0].header;
+		res["vege"] = vege[0].food;
+	} else {
+		res["vege-header"] = `Kasvisruoka ${weekdays[day]}`;
+		res["vege"] = "Päivän kasvisruoka puuttuu tietokannasta."
+	}
 
 	data_string = build_replace(data_string, res);
 

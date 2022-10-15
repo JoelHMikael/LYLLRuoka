@@ -129,7 +129,7 @@ async function writeShift(weekday, shiftId, shiftLine, courseLine, DB)
 				className = null;
 
 			dbOperations.push(DB.execute(
-				`INSERT INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
+				`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
 				[courseName, teacherName, className]
 			));
 		}
