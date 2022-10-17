@@ -47,7 +47,7 @@ fi
 echo ""
 
 echo 'Cloning the git repository...'
-git clone 'https://github.com/JoelHMikael/FoodJS.git' 2> /dev/null
+git clone 'https://github.com/JoelHMikael/LYLLRuoka.git' 2> /dev/null
 mkdir 'Updation'
 touch Updation/{shifts.txt,vanhalops.csv,uusilops.csv}
 echo -e 'Done!\n'
