@@ -126,10 +126,9 @@ You can make the server run automatically on reboot. This hasn't been tested, th
 
 Add to **roots** crontab (run `sudo crontab -e`):
 ```
-@reboot cd ["BASE DIRECTORY"]/LYLLRuoka && node server.js
-# For example:
-# @reboot cd /home/foobar/LYLLRuoka/LYLLRuoka && node server.js
+@reboot BASE_DIR='["BASE_DIRECTORY"]' ["BASE_DIRECTORY"]/LYLLRuoka/init.sh
 ```
+For example: `@reboot BASE_DIR='/home/foobar/LYLLRuoka' /home/foobar/LYLLRuoka/LYLLRuoka/init.sh`
 
 # Adding cool data that isn't required for the server to run
 

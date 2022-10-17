@@ -1,23 +1,22 @@
 #!/bin/sh
 exec 1>>/tmp/slogs
 exec 2>>/tmp/slogs
+echo "========"
 echo | date
-echo "Init running"
+echo "# Init running"
 
-echo "Removing old packages..."
-rm -rf $PATH_TO_LYLLRUOKA
-
-echo "Waiting for connection..."
-while [ ! "$(ping 'www.github.com' -c 1)" ]
-do
+echo "# Waiting for connection..."
+while ! ping 'example.org' -c 1; do
         sleep 5
 done
+echo "# Connected to internet!"
 
-cd "${PATH_TO_LYLLRUOKA%%FoodJS}"
+echo ""
 
-echo "Cloning new packages..."
-git clone "https://github.com/JoelHMikael/FoodJS.git"
-
-cd $PATH_TO_LYLLRUOKA
-echo "Starting server..."
+cd "$BASE_DIR/LYLLRuoka"
+echo "# node server.js:"
 node server.js
+
+echo "========"
+echo ""
+echo ""
