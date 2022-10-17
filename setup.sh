@@ -13,18 +13,16 @@ if [ "$(whoami)" == root ]; then
 	fi
 fi
 
-echo -e "This interactive script will install most of the things needed to run LYLLRuoka, except for:\n\t* The actual data to serve on the database\n\t* A SSL/TLS certificate\n\t* uhh\nWhen finished, \e[31mTHE INSTALL WILL TELL THAT IT SUCCEEDED\e[0m. If you don't see a message confirming the success of the installation, the installation \e[31mHAS FAILED. Remember to check that.\e[0m\n"
+echo -e "This interactive script will install most of the things needed to run LYLLRuoka, except for:\n\t* The actual data to serve on the database\n\t* A SSL/TLS certificate\nWhen finished, \e[31mTHE INSTALL WILL TELL THAT IT SUCCEEDED\e[0m. If you don't see a message confirming the success of the installation, the installation \e[31mHAS FAILED. Remember to check that.\e[0m\n"
 set -e
 echo 'The script will now ask a few questions that are going to be needed during the installation.'
 
-echo -e '\nInstall directory for LYLLRuoka? (absolute path in which you have all permissions)'
+echo -e '\nInstall directory for LYLLRuoka? (absolute path which you have all permissions for)'
 read path
 mkdir -p "$path/LYLLRuoka"
 cd "$path/LYLLRuoka"
 
-echo -e '\nChoose the mysql user hostname. (type localhost, if unsure)'
-read host
-echo 'Choose the mysql username.'
+echo "Choose the mysql username (don't supply the host)."
 read name
 echo 'Choose the mysql password.'
 read -s passw
@@ -65,12 +63,12 @@ echo 'Installing MySQL...'
 sudo apt-get -y install mysql-server > /dev/null
 echo -e 'Done!\n'
 
-echo "Now that MySQL has installed you can run the program 'mysql_secure_installation'. This is recommended, but there has been (read: I have had) problems with it sometimes. Try running it now as root. If it just doesn't seem to work, you can do without it, if you just make sure your server has a firewall that blocks requests from other computers to MySQL and have only trusted persons have access to the server computer. Press enter when you are ready..."
+echo "Now that MySQL has installed you can run the program 'mysql_secure_installation'. This is recommended, but there has been (read: I have had) problems with it sometimes, as it hasn't been able to do something and hasn't allowed stopping it with ^Z, ^C or ^D. Try running it now as root in another terminal. If it just doesn't seem to work, you can do without it, if you just make sure your server has a firewall that blocks requests from other computers to MySQL and have only trusted persons have access to the server computer. Press enter when you are ready..."
 read
 
 echo 'Setting up MySQL database...'
-echo -e "CREATE DATABASE lyllruoka;\nUSE lyllruoka;\n\nCREATE TABLE shiftnames (\n\tday INT,\n\tid INT,\n\tname VARCHAR(128) NOT NULL,\n\tPRIMARY KEY (day, id)\n);\nCREATE TABLE classes (\n\tcourse VARCHAR(6) PRIMARY KEY,\n\tclass VARCHAR(4)\n);\nCREATE TABLE shifts (\n\tday INT,\n\tshift INT,\n\tcourse VARCHAR(6),\n\tteacher VARCHAR(4),\n\tclass VARCHAR(4),\n\tPRIMARY KEY (day, course)\n);\nCREATE TABLE devs (\n\tid INT PRIMARY KEY AUTO_INCREMENT,\n\tname VARCHAR(30) NOT NULL,\n\tdescription VARCHAR(128),\n\tcontact VARCHAR(40) DEFAULT ''\n);\nCREATE TABLE stats (\n    start DATE PRIMARY KEY,\n    uptime INT,\n    requests INT,\n    requests_per_day INT\n);\nCREATE TABLE exams (\n\tstart DATE,\n\tend DATE,\n\tmessage VARCHAR(256),\n\tPRIMARY KEY (start, end)\n);\nCREATE TABLE foods (     \n    week INT,\n    day INT,\n    vegetarian TINYINT,\n    header VARCHAR(15),\n    dateString VARCHAR(13),\n    food VARCHAR(256)\n);\nCREATE USER '$name'@'$host' IDENTIFIED BY '$passw';\nGRANT ALL ON lyllruoka.* TO '$name'@'$host';\n" | sudo mysql > /dev/null
-echo -e "{\n\t\"host\": \"$host\",\n\t\"user\": \"$name\",\n\t\"password\": \"$passw\",\n\t\"database\": \"lyllruoka\"\n}" > dblogin.txt
+echo -e "CREATE DATABASE lyllruoka;\nUSE lyllruoka;\n\nCREATE TABLE shiftnames (\n\tday INT,\n\tid INT,\n\tname VARCHAR(128) NOT NULL,\n\tPRIMARY KEY (day, id)\n);\nCREATE TABLE classes (\n\tcourse VARCHAR(6) PRIMARY KEY,\n\tclass VARCHAR(4)\n);\nCREATE TABLE shifts (\n\tday INT,\n\tshift INT,\n\tcourse VARCHAR(6),\n\tteacher VARCHAR(4),\n\tclass VARCHAR(4),\n\tPRIMARY KEY (day, course)\n);\nCREATE TABLE devs (\n\tid INT PRIMARY KEY AUTO_INCREMENT,\n\tname VARCHAR(30) NOT NULL,\n\tdescription VARCHAR(128),\n\tcontact VARCHAR(40) DEFAULT ''\n);\nCREATE TABLE stats (\n    start DATE PRIMARY KEY,\n    uptime INT,\n    requests INT,\n    requests_per_day INT\n);\nCREATE TABLE exams (\n\tstart DATE,\n\tend DATE,\n\tmessage VARCHAR(256),\n\tPRIMARY KEY (start, end)\n);\nCREATE TABLE foods (     \n    week INT,\n    day INT,\n    vegetarian TINYINT,\n    header VARCHAR(15),\n    dateString VARCHAR(13),\n    food VARCHAR(256)\n);\nCREATE USER '$name'@'localhost' IDENTIFIED BY '$passw';\nGRANT ALL ON lyllruoka.* TO '$name'@'localhost';\n" | sudo mysql > /dev/null
+echo -e "{\n\t\"host\": \"localhost\",\n\t\"user\": \"$name\",\n\t\"password\": \"$passw\",\n\t\"database\": \"lyllruoka\"\n}" > dblogin.txt
 echo -e 'Done!\n'
 
 echo -e '\n==============================\nInstall finished successfully!\n=============================='

@@ -8,6 +8,7 @@ const DBPARSE	= require("./dbparse.js");
 const open	= require("./Functions/open.js");
 const strFuncs	= require("./Functions/stringFuncs.js");
 const dateFuncs	= require("./Functions/dateFuncs.js");
+const updateDB  = require("./update.js");
 
 
 async function init()
@@ -44,7 +45,11 @@ async function init()
 	// get the MySQL DB connection
 	const SQLDB = new SQL_DBS.Database(JSON.parse(dbcredentials));
 
-	// Add the foods to the database
+	// Update...
+	// ...shifts and classes
+	await updateDB.update(SQLDB, "../Updation/shifts.txt", "../Updation/vanhalops.csv", "../Updation/uusilops.csv");
+	console.log("Shifts and classes updated.");
+	// ...foods
 	await food.build(SQLDB);
 	setInterval(
 		() =>
@@ -53,6 +58,7 @@ async function init()
 		},
 		7 * 24 * 60 * 60 * 1000
 	);
+	console.log("Foods updated.")
 
 	// server code
 	async function server(req, res)
@@ -100,6 +106,7 @@ async function init()
 	// start servers
 	const httpsServer = https.createServer(httpsOpts, server).listen(443);
 	const httpServer = http.createServer(server).listen(80);
+	console.log("Servers Up And Running!")
 	
 	// stop server
 	async function closeServers() {

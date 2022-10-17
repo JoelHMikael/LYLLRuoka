@@ -48,7 +48,6 @@ async function buildFoods(DB)
 		}
 	}
 	await Promise.all(foodInitOperations);
-    console.log("Foods built");
 }
 
 function getFoodLink(week)
