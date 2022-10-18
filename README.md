@@ -130,6 +130,8 @@ Add to **roots** crontab (run `sudo crontab -e`):
 ```
 For example: `@reboot BASE_DIR='/home/foobar/LYLLRuoka' /home/foobar/LYLLRuoka/LYLLRuoka/init.sh`
 
+If you need to troubleshoot the starting, you can find some logs in /tmp/slogs. Newest at the bottom. 
+
 # Adding cool data that isn't required for the server to run
 
 ## Notifying of unusual food shifts (eg. during exams)
