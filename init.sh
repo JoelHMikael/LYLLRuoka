@@ -13,6 +13,14 @@ echo "# Connected to internet!"
 
 echo ""
 
+echo "# Testing DB availability"
+while ! echo 'exit' | mysql; do
+	sleep 5
+done
+echo "# Database seems to be available (ignore error messages above)"
+
+echo ""
+
 cd "$BASE_DIR/LYLLRuoka"
 echo "# node server.js:"
 node server.js

@@ -173,10 +173,14 @@ function randInt(start, stop)
 	return start + Math.floor(Math.random() * (stop - start));
 }
 
-async function getRandomIndex(day, DB)
+async function getRandomIndex(day, DB, depth=0)
 {
+	if (depth > 10)
+		return null;
+
 	let indexes = await DB.execute("SELECT course, teacher, class FROM shifts WHERE day = ? ORDER BY RAND() LIMIT 1", [day]);
-	indexes = Object.values(indexes[0]);
+	
+	indexes = Object.values(indexes[0] || [null, null, null]); /// ERROR HERE!!!
 	let start = randInt(0, indexes.length);
 	for (let test = 0; test < 3; test++)
 	{
@@ -185,7 +189,7 @@ async function getRandomIndex(day, DB)
 			return indexes[i];
 	}
 	console.log("Warning: row without class/teacher/course in database!");
-	return getRandomIndex(day, DB);
+	return getRandomIndex(day, DB, depth + 1);
 }
 
 

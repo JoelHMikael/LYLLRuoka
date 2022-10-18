@@ -252,6 +252,8 @@ async function buildMain(args)
 
 	// get the example input
 	res["example-input"] = await DBPARSE.randomIndex(day, SQLDB);
+	if (res["example-input"] === null)
+		res["example-input"] = "";
 
 	// get the day
 	let weekdays = ["ma", "ti", "ke", "to", "pe", "la", "su"];
