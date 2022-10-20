@@ -281,12 +281,12 @@ async function buildMain(args)
 	    res["food-header"] = `Kouluruoka ${weekdays[day]}`;
 	    res["food"] = "Päivän ruoka puuttuu tietokannasta.";
 	}
-	if (food[1] !== undefined)  {
+	if (vege[0] !== undefined)  {
 		res["vege-header"] = vege[0].header;
 		res["vege"] = vege[0].food;
 	} else {
-		res["vege-header"] = `Kasvisruoka ${weekdays[day]}`;
-		res["vege"] = "Päivän kasvisruoka puuttuu tietokannasta."
+		res["vege-header"] = "";
+		res["vege"] = "";
 	}
 
 	data_string = build_replace(data_string, res);

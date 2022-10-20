@@ -180,7 +180,7 @@ async function getRandomIndex(day, DB, depth=0)
 
 	let indexes = await DB.execute("SELECT course, teacher, class FROM shifts WHERE day = ? ORDER BY RAND() LIMIT 1", [day]);
 	
-	indexes = Object.values(indexes[0] || [null, null, null]); /// ERROR HERE!!!
+	indexes = Object.values(indexes[0] || [null, null, null]);
 	let start = randInt(0, indexes.length);
 	for (let test = 0; test < 3; test++)
 	{
