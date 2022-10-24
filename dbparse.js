@@ -71,6 +71,7 @@ async function writeShifts(data, DB)
 		DB.query_raw("DELETE FROM shiftnames")
 	]);
 
+	data = data.replace(/RUOKAILUVUOROT.*/, "");
 	const dbOperations = [];
 	const shiftRegex = /((?:MAANANTAI|TIISTAI|KESKIVIIKKO|TORSTAI|PERJANTAI)?.*)\s*(RUOKAILU.*)\s*(.*)/gmi;
 	const shifts = data.matchAll(shiftRegex);
