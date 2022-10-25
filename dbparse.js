@@ -145,7 +145,7 @@ async function writeShift(weekday, shiftId, shiftLine, courseLine, DB)
 			`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
 			[courseName1, teacher, className1]
 		));
-		if (courseName2 !== null) {
+		if (courseName2 !== undefined) {
 			dbOperations.push(DB.execute(
 				`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
 				[courseName2, teacher, className2]
