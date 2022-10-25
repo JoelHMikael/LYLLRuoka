@@ -1,8 +1,7 @@
 #!/bin/sh
-exec 1>>/tmp/slogs
-exec 2>>/tmp/slogs
-echo "========"
-echo | date
+exec 1>>/var/slogs
+exec 2>>/var/slogs
+echo ""
 echo "# Init running"
 
 echo "# Waiting for connection..."
@@ -22,9 +21,11 @@ echo "# Database seems to be available (ignore error messages above)"
 echo ""
 
 cd "$BASE_DIR/LYLLRuoka"
-echo "# node server.js:"
-node server.js
+while echo "# node server.js:"; do
+	node server.js
 
-echo "========"
-echo ""
-echo ""
+	# Sleep below, so that the loop can't cause too big a load to the server, if the server terminates very fast.
+	sleep 5
+	echo "SERVER TERMINATED!"
+	echo "--------"
+done

@@ -108,35 +108,35 @@ async function writeShift(weekday, shiftId, shiftLine, courseLine, DB)
 	);
 
 	// Shift contents
-	const courseRegex = /(?:[a-ö]{2,3}\d{2,3} ?\+? ?)+ [a-ö]{4}/gi;
+	const courseRegex = /([A-ZÅÄÖ]{2,3}\d{2,3})(?:\+([A-ZÅÄÖ]{2,3}\d{2,3}))?(?: ([A-ZÅÄÖ]{4}))?/gi;
 	const courses = courseLine.matchAll(courseRegex);
 	for(const course of courses)
 	{
-		const _lastSpace = course[0].lastIndexOf(" ");
-		const courseNames = course[0].substring(0, _lastSpace).split(/ ?\+ ?/);
-		const teacherName = course[0].substring(_lastSpace + 1);
+		const courseName1 = course[1];
+		const courseName2 = course[2]; // this exists if the course is like MA11+MA12 RIHO
+		const teacher = course[3] || null;
 
-		// For loop is needed, because some courses are marked like KE16+KE26 MATI
-		async function handleCourse(courseName, teacherName)
-		{
-			let className = await DB.execute(
-				"SELECT class FROM classes WHERE course=?",
-				[courseName]
-			);
-			className = className[0];
-			if (className !== undefined)
-				className = className.class;
-			else
-				className = null;
+		// Get the class
+		let className = await DB.execute(
+			"SELECT class FROM classes WHERE course=?",
+			[courseName]
+		);
+		if (className !== undefined)
+			className = className.class;
+		else
+			className = null;
+		className = className[0];
 
+		// Add the info
+		dbOperations.push(DB.execute(
+			`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
+			[courseName1, teacher, className]
+		));
+		if (courseName2 !== null) {
 			dbOperations.push(DB.execute(
 				`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
-				[courseName, teacherName, className]
+				[courseName2, teacher, className]
 			));
-		}
-		for(const courseName of courseNames)
-		{
-			dbOperations.push(handleCourse(courseName, teacherName));
 		}
 	}
 
