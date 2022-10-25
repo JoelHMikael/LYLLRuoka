@@ -207,13 +207,22 @@ async function buildMain(args)
 	if (res["shift"] === undefined)
 	{
 		let shift = await DBPARSE.get(day, index, SQLDB);
+		// shift looks like the following: (useful info for debugging. this is really obscure without any information about how this variable looks like.)
+		/*[    
+		  {    
+		    name: 'RUOKAILUVUORO I: ruokailu klo 10.50 – 11.20, oppitunti klo 11.30 – 12.50'    
+		  },    
+		  [ { course: 'OPO15', teacher: null, class: null } ]    
+		]*/
 		if (shift !== undefined)
 		{
 			res["shift"] = shift[0].name;
 			res["shift-header"] = "";
 			for (let i = 0; i < shift[1].length; i++)
 			{
-				res["shift-header"] += `${shift[1][i].course}/${shift[1][i].teacher}`;
+				res["shift-header"] += `${shift[1][i].course}`;
+				if (shift[1][i].teacher !== null)
+					res["shift-header"] += `/${shift[1][i].teacher}`;
 				if (shift[1][i].class !== null)
 					res["shift-header"] += `/${shift[1][i].class}`
 				if (i + 1 !== shift[1].length)

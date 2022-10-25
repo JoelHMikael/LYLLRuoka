@@ -117,25 +117,38 @@ async function writeShift(weekday, shiftId, shiftLine, courseLine, DB)
 		const teacher = course[3] || null;
 
 		// Get the class
-		let className = await DB.execute(
+		let className1 = await DB.execute(
 			"SELECT class FROM classes WHERE course=?",
-			[courseName]
+			[courseName1]
 		);
-		if (className !== undefined)
-			className = className.class;
+		className1 = className1[0];
+		if (className1 !== undefined)
+			className1 = className1.class;
 		else
-			className = null;
-		className = className[0];
+			className1 = null;
+
+		let className2 = undefined;
+		if (courseName2 !== undefined) {
+			className2 = await DB.execute(
+				"SELECT class FROM classes WHERE course=?",
+				[courseName2]
+			);
+			className2 = className2[0];
+			if (className2 !== undefined)
+				className2 = className2.class;
+			else
+				className2 = null;
+		}
 
 		// Add the info
 		dbOperations.push(DB.execute(
 			`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
-			[courseName1, teacher, className]
+			[courseName1, teacher, className1]
 		));
 		if (courseName2 !== null) {
 			dbOperations.push(DB.execute(
 				`INSERT IGNORE INTO shifts VALUES (${weekday}, ${shiftId}, ?, ?, ?)`,
-				[courseName2, teacher, className]
+				[courseName2, teacher, className2]
 			));
 		}
 	}
