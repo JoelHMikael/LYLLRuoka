@@ -122,7 +122,7 @@ Servers Up And Running!
 ```
 Great! Now you have the server running. If you restart the server or close the terminal window or anything else, you will obviously have to restart the server. 
 
-You can make the server run automatically on reboot. This hasn't been tested, though...
+You can make the server run automatically on reboot.
 
 Add to **roots** crontab (run `sudo crontab -e`):
 ```

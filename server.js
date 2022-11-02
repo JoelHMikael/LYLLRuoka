@@ -21,7 +21,8 @@ async function init()
 		"./Cont/404/index.css": buildDefault,
 		"./Cont/non-main.css": buildDefault,
 		"./Cont/Images/help.png": buildImage,
-		"./Cont/Images/back.png": buildImage
+		"./Cont/Images/back.png": buildImage,
+		"./Cont/Images/favicon.ico": buildImage,
 	};
 	const errorPath = "./Cont/404/index.html";
 
