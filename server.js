@@ -50,7 +50,7 @@ async function init()
 	// ...shifts and classes
 	await updateDB.update(SQLDB, "../Updation/shifts.txt", "../Updation/vanhalops.csv", "../Updation/uusilops.csv");
 	// ...foods
-	run_at_monday_mornings(() => food.build(SQLDB));
+	dateFuncs.run_at_monday_mornings(() => food.build(SQLDB));
 	if ((new Date()).getDay() !== 1) // update if it's not monday. if it's monday, it has already been run by the scheduler above.
 		await food.build(SQLDB);
 	// server code
