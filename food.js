@@ -48,6 +48,8 @@ async function buildFoods(DB)
 		}
 	}
 	await Promise.all(foodInitOperations);
+	console.log("Foods updated.")
+	return 0;
 }
 
 function getFoodLink(week)

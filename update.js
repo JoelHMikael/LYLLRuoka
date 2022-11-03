@@ -9,7 +9,9 @@ async function buildDB(dbconnection, shiftPath, ...classfiles)
 	shiftCont = shiftCont.toString("utf-8").replaceAll("\r", ""); // \r because of the \r\n newline on windows which may create problems
 
 	await parseClasses(dbconnection, ...classfiles),
+	console.log("Classes updated.");
 	await parse.build(shiftCont, dbconnection)
+	console.log("Shifts updated.");
 	return 0;
 }
 

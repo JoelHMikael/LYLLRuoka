@@ -49,18 +49,10 @@ async function init()
 	// Update...
 	// ...shifts and classes
 	await updateDB.update(SQLDB, "../Updation/shifts.txt", "../Updation/vanhalops.csv", "../Updation/uusilops.csv");
-	console.log("Shifts and classes updated.");
 	// ...foods
-	await food.build(SQLDB);
-	setInterval(
-		() =>
-		{
-			food.build(SQLDB);
-		},
-		7 * 24 * 60 * 60 * 1000
-	);
-	console.log("Foods updated.")
-
+	run_at_monday_mornings(() => food.build(SQLDB));
+	if ((new Date()).getDay() !== 1) // update if it's not monday. if it's monday, it has already been run by the scheduler above.
+		await food.build(SQLDB);
 	// server code
 	async function server(req, res)
 	{
