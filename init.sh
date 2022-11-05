@@ -2,7 +2,7 @@
 exec 1>>/var/slogs
 exec 2>>/var/slogs
 echo ""
-echo "# Init running"
+echo "# Init running at $(date)"
 
 echo "# Waiting for connection..."
 while ! ping 'example.org' -c 1; do
@@ -26,6 +26,8 @@ while echo "# node server.js:"; do
 
 	# Sleep below, so that the loop can't cause too big a load to the server, if the server terminates very fast.
 	sleep 5
-	echo "SERVER TERMINATED!"
+	echo "# Server terminated at $(date)"
 	echo "--------"
+	echo ""
+	echo ""
 done

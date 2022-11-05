@@ -283,7 +283,7 @@ async function buildMain(args)
 	    res["food-header"] = `Kouluruoka ${weekdays[day]}`;
 	    res["food"] = "Päivän ruoka puuttuu tietokannasta.";
 	}
-	if (vege[0] !== undefined)  {
+	if ((vege[0] !== undefined) && (vege[0].food !== res["food"]))  {
 		res["vege-header"] = vege[0].header;
 		res["vege"] = vege[0].food;
 	} else {
