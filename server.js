@@ -182,7 +182,7 @@ async function buildMain(args)
 	let day = d.getDay();
 	day = (day + +(day === 0) * 7) - 1; // converts from 0 = sunday to 0 = monday
 	const actualDay = day;
-	day = +(!(day === 5) && !(day === 6)) * day;
+	day = +(!(day === 5) && !(day === 6)) * day; // resets day to monday if saturday or sunday
 	if ((typeof query.day === "string") && (parseInt(query.day).toString() === query.day) && (!isNaN(parseInt(query.day))) && (parseInt(query.day) >= 0) && (parseInt(query.day) < 5))
 		day = parseInt(query.day);
 	// set the day selected (must be done manually with this replacement system)
@@ -239,16 +239,21 @@ async function buildMain(args)
 	const examInfo = await SQLDB.query("SELECT * FROM exams");
 	for(let week = 0; week < examInfo.length; week++)
 	{
+		// get the date of the requested day
+		const nextDate = new Date(
+			d.getFullYear(),
+			d.getMonth(),
+			d.getDate() + day - actualDay + (day < actualDay)*7
+		);
+
 		if (dateFuncs.between(
-			d,
+			nextDate,
 			new Date(examInfo[week].start),
 			new Date(examInfo[week].end)
 		))
 		{
-			const message = "<div id=\"foodshift\">" +
-				`<div class="float-block">${examInfo[week].message}</div>` +
-				"</div";
-			data_string = strFuncs.replaceElement(data_string, "div id=\"foodshift\"", message);
+			const message = `<div class="shift-result float-block">${examInfo[week].message}</div>`;
+			data_string = strFuncs.replaceElement(data_string, "div id=\"shift-result\" class=\"float-block\"", message);
 		}
 	}
 
