@@ -4,6 +4,7 @@
 		<meta charset="utf-8">
 		<title>LYLL-ruokailuvuoro</title>
 		<link href="/index.css" rel="stylesheet" type="text/css">
+		<link href="/non-main.css" rel="stylesheet" type="text/css">
 		<link rel="icon" type="image/x-icon" href="/Images/favicon.ico">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
@@ -16,22 +17,34 @@
 
 		<main>
 			<form method="POST">
-				<p class=shadow>Liitä allaolevaan tekstikenttään ruokailuvuorot (Wilma-viestin teksti):</p>
+				<p class=shadow>Korvaa alla olevaan tekstikenttään tämän jakson ruokailuvuorot. Tai seuraavan jakson ruokailuvuorot. Huomaa kuitenkin, että ne tulevat heti julkisiksi eivätkä vasta seuraavassa jaksossa.</p>
 				<br>
 				<textarea name="shifts" rows="24" style="text-align: left;">\(shifts\)</textarea>
 				<br>
-				<p class="shadow">Liitä allaolevaan tekstikenttään kurssitarjottimista tämä jakso. Voit avata kurssitarjottimet Excelissä tai Libreoffice Calcissa, valita alueen, jossa on jakson kurssit ja CTRL+C CTRL+V tähän. Toista sama kaikille jakson alueille kaikista vuoden kurssitarjottimista.</p>
+				<br>
+				<p class="shadow">Korvaa allaolevaan tekstikenttään kurssitarjottimista tämä jakso. Voit avata kurssitarjottimet Excelissä tai Libreoffice Calcissa, valita alueen, jossa on jakson kurssit ja CTRL+C CTRL+V tähän. Toista sama kaikille jakson alueille kaikista vuoden kurssitarjottimista.</p>
 				<br>
 				<textarea name="classes" rows="24" style="text-align: left;">\(classes\)</textarea>
 				<br>
 				<br>
-				<p class="shadow">Alta voit muokata ilmoituksia.</p>
+				<p class="shadow">Alta voit muokata ilmoituksia, jotka korvaavat ruokailuvuorohaun tuloskentän. Nämä ilmoitukset sopivat mainiosti kaikkiin lomiin, koeviikkoihin ca muihin tapahtumiin, jotka muuttavat ruokailuvuoroja (lomallakin ruokailuvuorot muuttuvat, koska niitä ei silloin järjestetä).</p>
+				<br>
 				<textarea name="exceptions" rows="16" style="text-align: left;">\(exceptions\)</textarea>
+				<br>
+				<br>
+				<label for="password">Syötä salasana</label>
+				<input type="password" name="password" id="password" required>
+				<br>
 				<br>
 				<input type="submit" id="send" class="highlight" value="Päivitä">
 				<br>
+				<br>
 				<p>Painikkeen painamisen jälkeen seuraavan sivun latautumisessa kestää, koska serveri käsittelee syötteesi loppuun asti ennen vastaamista, jotta se voi kertoa, onnistuiko päivitys.</p>
+				
+
 			</form>
+			<p>Etkö tahtonutkaan päivittää mitään? Alta pääset takaisin etusivulle.</p>
+			<a class="back" href="/"><img src="/Images/back.png" alt="Takaisin etusivulle"></a>
 		</main>
 
 		<footer>

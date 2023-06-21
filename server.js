@@ -9,10 +9,12 @@ const open	= require("./Functions/open.js");
 const strFuncs	= require("./Functions/stringFuncs.js");
 const dateFuncs	= require("./Functions/dateFuncs.js");
 const updateDB  = require("./update.js");
+const { createHash} = require("node:crypto");
 
 const SHIFTPATH = "../Updation/shifts.txt";
 const CLASSPATH = "../Updation/classes.txt";
 const EXCEPTIONPATH = "../Updation/exceptions.txt";
+const PASSPATH = "../password-hashes.txt";
 
 async function init()
 {
@@ -77,10 +79,13 @@ async function init()
 				let q = new URLSearchParams(data);
 				let shifts = "";
 				let classes = "";
+				let exceptions = "";
+				let suppliedPassword = "";
 				try {
 					shifts = decodeURIComponent(q.get("shifts")).replaceAll("+", " ").replaceAll('\r\n', '\n');
 					classes = decodeURIComponent(q.get("classes")).replaceAll("+", " ").replaceAll('\r\n', '\n');
 					exceptions = decodeURIComponent(q.get('exceptions').replaceAll("+", ' ')).replaceAll('\r\n', '\n');
+					suppliedPassword = decodeURIComponent(q.get('password'));
 				} catch {
 					console.log("Malformed url, presumably");
 					res.writeHead(400);
@@ -88,12 +93,33 @@ async function init()
 					res.end(cont);
 					return;
 				}
-				if (shifts === null || classes === null) {
+				if (shifts === null || classes === null || exceptions === null || suppliedPassword === null) {
 					res.writeHead(400);
-					const cont = await buildCustomMessage("400: Virheellinen pyyntö", "Avaimia 'shifts' ja/tai 'classes' ei löytynyt pyynnöstä");
+					const cont = await buildCustomMessage("400: Virheellinen pyyntö", "Kaikkia tietoja ei löytynyt pyynnöstä");
 					res.end(cont);
 					return;
 				}
+
+				const hashObj = createHash("sha256");
+				hashObj.update(suppliedPassword);
+				let suppliedPassHash = hashObj.digest('hex');
+				console.log(suppliedPassHash);
+				let passHashes = await open.file(PASSPATH);
+				passHashes = passHashes.toString('utf-8').split("\n");
+				let match = false;
+				for(let hash of passHashes) {
+					if (suppliedPassHash === hash) {
+						match = true;
+						break;
+					}
+				}
+				if (!match) {
+					res.writeHead(401);
+					const cont = await buildCustomMessage("401: Virheellinen salasana", "");
+					res.end(cont);
+					return;
+				}
+
 				let shiftfile = await fs.open(`${SHIFTPATH}.tmp`, "w");
 				await shiftfile.write(shifts);
 				shiftfile.close();
