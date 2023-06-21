@@ -134,7 +134,7 @@ If you need to troubleshoot the starting, you can find some logs in /tmp/slogs. 
 
 # Adding cool data that isn't required for the server to run
 
-## Notifying of unusual food shifts (eg. during exams)
+## Notifying of unusual food shifts (eg. during exams or vacations)
 
 Currently the notifications have to be added manually to the MySQL database. Here's an example:
 ```

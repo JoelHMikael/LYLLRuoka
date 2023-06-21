@@ -4,7 +4,7 @@ const { weekdayToNumber } = require("./Functions/dateFuncs.js");
 
 function* scrapeFood(data)
 {
-	const foodRegex = /<title>(\w{2} (?:\d\d?\.){2}\d{4})<\/title><description><!\[CDATA\[(Lounas) ?:? ?(.*?)<br>(Kasvislounas) ?:? ?(.*?)]]><\/description>/gm
+	const foodRegex = /<title>(\w{2} (?:\d\d?\.){2}\d{4})<\/title><description><!\[CDATA\[(Lounas) ?:? ?(.*?)(Kasvislounas) ?:? ?(.*?)]]><\/description>/gm;
 	const foods = data.matchAll(foodRegex);
 	for(const food of foods)
 	{

@@ -5,14 +5,14 @@ function stringToDate(s) {
 }
 
 const isBetweenDates = (date, date1, date2) => {
-    date = approxDate(date);
-    date1 = approxDate(date1);
-    date2 = approxDate(date2);
+    date = floorDate(date);
+    date1 = floorDate(date1);
+    date2 = floorDate(date2);
     return ((date.getTime() >= date1.getTime())
     && (date.getTime() <= date2.getTime()));
 };
 
-function approxDate(d)
+function floorDate(d)
 {
     return new Date(`${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`);
 }
@@ -46,7 +46,9 @@ function run_at_monday_mornings(func) {
 	days_to_elapse = 8 - weekday;
 	ms_to_elapse = ms_in_h * (
 		days_to_elapse * 24/*hours in a day*/
-		- hour + 1.5 // removes unneccessary hours so that we update it at 1:30 am
+		- hour + 1.5 // removes unneccessary hours so that we update it at 1:30 am just
+			     //in case the foods aren't updated instantly to the city's
+			     // servers.
 	);
 
 	setTimeout(() => run_at_monday_mornings(func), ms_to_elapse);

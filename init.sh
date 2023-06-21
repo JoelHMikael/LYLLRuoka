@@ -26,6 +26,8 @@ while echo "# node server.js:"; do
 
 	# Sleep below, so that the loop can't cause too big a load to the server, if the server terminates very fast.
 	sleep 5
-	echo "# SERVER TERMINATED at $(date)!"
+	echo "# Server terminated at $(date)"
 	echo "--------"
+	echo ""
+	echo ""
 done
