@@ -1,6 +1,5 @@
-//const http	= require("http");
 const https	= require("https");
-const http = require("http");
+const http	= require("http");
 const url	= require("url");
 const food	= require("./food.js");
 const SQL_DBS	= require("./database.js");
@@ -16,6 +15,7 @@ async function init()
 	const build = {
 		"./Cont/index.html": buildMain,
 		"./Cont/index.css": buildDefault,
+		"./Cont/updation/index.html": buildDefault,
 		"./Cont/devs/index.html": buildDevs,
 		"./Cont/devs/index.css": buildDefault,
 		"./Cont/404/index.css": buildDefault,
@@ -25,9 +25,11 @@ async function init()
 		"./Cont/Images/favicon.ico": buildImage,
 	};
 	const errorPath = "./Cont/404/index.html";
+        const SHIFTPATH = "../Updation/shifts.txt";
+        const CLASSPATH = "../Updation/classes.txt";
 
-    const startDate = new Date();
-    let visitorCount = 0;
+	const startDate = new Date();
+	let visitorCount = 0;
 
 	// await for needed things in async
 	let [dbcredentials, httpsKey, httpsCert] = await Promise.all([
@@ -37,7 +39,7 @@ async function init()
 	]);
 
 
-    // https options, you need to get a certificate in the file ../Certificate for the server to work
+	// https options, you need to get a certificate in the file ../Certificate for the server to work
 	const httpsOpts = {
 		key: httpsKey,
 		cert: httpsCert
@@ -48,7 +50,7 @@ async function init()
 
 	// Update...
 	// ...shifts and classes
-	await updateDB.update(SQLDB, "../Updation/shifts.txt", "../Updation/vanhalops.csv", "../Updation/uusilops.csv");
+	await updateDB.update(SQLDB, SHIFTPATH, CLASSPATH);
 	// ...foods
 	dateFuncs.run_at_monday_mornings(() => food.build(SQLDB));
 	if ((new Date()).getDay() !== 1) // update if it's not monday. if it's monday, it has already been run by the scheduler above.
@@ -56,8 +58,57 @@ async function init()
 	// server code
 	async function server(req, res)
 	{
-        // Lightweight analytics. Don't be evil. We just want to know if anyone uses this.
-        visitorCount++;
+		visitorCount++;
+
+		// Updation panel
+		if (req.method === "POST") {
+			let data = "";
+			req.on("data", chunk => {
+				data += chunk;
+				if (data.length > 1e6) {
+					res.writeHead(413);
+					res.end("Liian pitkä pyyntö");
+					req.connection.destroy();
+				}
+			});
+			req.on("end", async function updateandrespond() {
+				let q = new URLSearchParams(data);
+				let shifts = "";
+				let classes = "";
+				try {
+					shifts = decodeURIComponent(q.get("shifts")).replaceAll("+", " ");
+					classes = decodeURIComponent(q.get("classes")).replaceAll("+", " ");
+				} catch {
+					console.log("Malformed url, presumably");
+					res.writeHead(400);
+					res.end();
+				}
+				if (shifts === null || classes === null) {
+					res.writeHead(400);
+					res.end("Avainta 'shifts' ja/tai 'classes' ei löytynyt pyynnöstä.");
+				}
+				let shiftfile = await fs.open(SHIFTPATH, "w");
+				await shiftfile.write(shifts);
+				shiftfile.close();
+				if (classes != "") {
+					let classfile = await fs.open(CLASSPATH, "w");
+					await classfile.write(classes)
+					classfile.close();
+				}
+
+				try {
+					await updateDB.update(SQLDB, SHIFTPATH, CLASSPATH);
+				} catch(e) {
+					res.writeHead(400);
+					res.end("Virhe tietojen käsittelyssä. Ota yhteys kehittäjään.");
+					console.log(e);
+					return;
+				}
+				res.writeHead(200);
+				res.end("Kiitos paljon! Näyttää siltä, että tiedot saatiin päivitettyä.");
+			});
+			return;
+		}
 
 		// validate inputs
 		let q = url.parse(req.url, true);
@@ -322,6 +373,14 @@ async function buildDevs(args)
 	return build_replace(data.toString("utf-8"), {"devs": res});
 }
 
+async function buildCustomMessage(header, message) {
+	let data = await open.file("./Cont/custom-message/index.html");
+	data = data
+		.toString("utf-8")
+		.replace("\\(header\\)", header)
+		.replace("\\(content\\)", message);
+	return data;
+}
 
 async function build404(args)
 {

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fi">
+	<head>
+		<meta charset="utf-8">
+		<title>LYLL-ruokailuvuoro</title>
+		<link href="/index.css" rel="stylesheet" type="text/css">
+		<link rel="icon" type="image/x-icon" href="/Images/favicon.ico">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body>
+		<header>
+			<h1 class=shadow>Ruokailuvuorojen ja luokkien päivityssivu</h1>
+		</header>
+
+		<br>
+
+		<main>
+			<form method="POST">
+				<p class=shadow>Liitä allaolevaan tekstikenttään ruokailuvuorot (Wilma-viestin teksti):</p>
+				<br>
+				<textarea name="shifts" rows="24" style="text-align: left;"></textarea>
+				<br>
+				<p class="shadow">Kiitos paljon! Kun painat sivun lopusta 'Päivitä'-painiketta, toimii ruokailuvuorohaku (toivon mukaan) jälleen. Jos sinulla on yhtään enemmän aikaa, voit myös suorittaa allaolevan vaiheen. Sen suoritettuasi ruokailuvuoroja voi hakea opettajan ja kurssikoodin lisäksi luokkatilan perusteella.</p>
+				<br>
+				<p class="shadow">Liitä allaolevaan tekstikenttään kurssitarjottimista tämä jakso. Voit avata kurssitarjottimet Excelissä tai Libreoffice Calcissa, valita alueen, jossa on jakson kurssit ja CTRL+C CTRL+V tähän. Toista sama kaikille jakson alueille kaikista vuoden kurssitarjottimista.</p>
+				<br>
+				<textarea name="classes" rows="24" style="text-align: left;"></textarea>
+				<br>
+				<input type="submit" id="send" class="highlight" value="Päivitä">
+				<br>
+				<p>Painikkeen painamisen jälkeen seuraavan sivun latautumisessa kestää, koska serveri käsittelee syötteesi loppuun asti ennen vastaamista, jotta se voi kertoa, onnistuiko päivitys.</p>
+			</form>
+		</main>
+
+		<footer>
+			<a href="https://www.github.com/JoelHMikael/LYLLRuoka">Lähdekoodi</a>
+			<span>|</span>
+			<a href="/devs">Ota yhteyttä</a>
+		</footer>
+	</body>
+</html>

@@ -61,12 +61,16 @@ body {
 #input[type="text"], select {
 	background-color: white;
 }
+textarea {
+	width: 80%;
+}
 
 /*** the send-button ***/
 #send {
 	background: blue;
 	padding: .5em;
 	margin: .5em;
+	margin-bottom: 0;
 	font-weight: bold;
 
 	position: relative;
@@ -78,6 +82,11 @@ body {
 	right: .25em;
 	bottom: .25em;
 	box-shadow: .25em .25em;
+}
+
+#updationlink {
+	color: #aaaaaa;
+	font-size: .8rem;
 }
 
 /*** Footer ***/
