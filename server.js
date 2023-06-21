@@ -50,7 +50,7 @@ async function init()
 	// ...shifts and classes
 	await updateDB.update(SQLDB, "../Updation/shifts.txt", "../Updation/vanhalops.csv", "../Updation/uusilops.csv");
 	// ...foods
-	run_at_monday_mornings(() => food.build(SQLDB));
+	dateFuncs.run_at_monday_mornings(() => food.build(SQLDB));
 	if ((new Date()).getDay() !== 1) // update if it's not monday. if it's monday, it has already been run by the scheduler above.
 		await food.build(SQLDB);
 	// server code
@@ -239,16 +239,19 @@ async function buildMain(args)
 	const examInfo = await SQLDB.query("SELECT * FROM exams");
 	for(let week = 0; week < examInfo.length; week++)
 	{
+		const nextDate = new Date(
+			d.getFullYear(),
+			d.getMonth(),
+			d.getDate() + day - actualDay + (day < actualDay)*7
+		);
 		if (dateFuncs.between(
-			d,
+			nextDate,
 			new Date(examInfo[week].start),
 			new Date(examInfo[week].end)
 		))
 		{
-			const message = "<div id=\"foodshift\">" +
-				`<div class="float-block">${examInfo[week].message}</div>` +
-				"</div";
-			data_string = strFuncs.replaceElement(data_string, "div id=\"foodshift\"", message);
+			const message = `<div class="shift-result float-block">${examInfo[week].message}</div>`;
+			data_string = strFuncs.replaceElement(data_string, "div id=\"shift-result\" class=\"float-block\"", message);
 		}
 	}
 
@@ -283,7 +286,7 @@ async function buildMain(args)
 	    res["food-header"] = `Kouluruoka ${weekdays[day]}`;
 	    res["food"] = "Päivän ruoka puuttuu tietokannasta.";
 	}
-	if (vege[0] !== undefined)  {
+	if ((vege[0] !== undefined) && (vege[0].food !== res["food"]))  {
 		res["vege-header"] = vege[0].header;
 		res["vege"] = vege[0].food;
 	} else {

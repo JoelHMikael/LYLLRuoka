@@ -4,7 +4,7 @@ const { weekdayToNumber } = require("./Functions/dateFuncs.js");
 
 function* scrapeFood(data)
 {
-	const foodRegex = /<title>(\w{2} (?:\d\d?\.){2}\d{4})<\/title><description><!\[CDATA\[(Lounas) ?:? ?(.*?)(Kasvislounas) ?:? ?(.*?)]]><\/description>/gm;
+	const foodRegex = /<title>(\w{2} (?:\d\d?\.){2}\d{4})<\/title><description><!\[CDATA\[(Lounas) ?:? ?(.*?)<br>(Kasvislounas) ?:? ?(.*?)]]><\/description>/gm
 	const foods = data.matchAll(foodRegex);
 	for(const food of foods)
 	{
@@ -31,14 +31,14 @@ async function buildFoods(DB)
 	{
 		for(const food of foods[week - 1])
 		{
-			foodInitOperations.push(DB.execute("INSERT INTO foods VALUES (?, ?, FALSE, ?, ?, ?)", [
+			foodInitOperations.push(DB.execute("INSERT IGNORE INTO foods VALUES (?, ?, FALSE, ?, ?, ?)", [
 				week,
 				food[0],
 				food[2][0],
 				food[1],
 				food[2][1]
 			]));
-			foodInitOperations.push(DB.execute("INSERT INTO foods VALUES (?, ?, TRUE, ?, ?, ?)", [
+			foodInitOperations.push(DB.execute("INSERT IGNORE INTO foods VALUES (?, ?, TRUE, ?, ?, ?)", [
 				week,
 				food[0],
 				food[3][0],

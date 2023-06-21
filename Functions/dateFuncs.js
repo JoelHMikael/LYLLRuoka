@@ -46,9 +46,8 @@ function run_at_monday_mornings(func) {
 	days_to_elapse = 8 - weekday;
 	ms_to_elapse = ms_in_h * (
 		days_to_elapse * 24/*hours in a day*/
-		- hour // removes unneccessary hours so that we update it at 0 am
-	) + 1 /*+1 so that we know that it won't be exactly midnight
-	and possibly sunday. idk if this actually is needed.*/;
+		- hour + 1.5 // removes unneccessary hours so that we update it at 1:30 am
+	);
 
 	setTimeout(() => run_at_monday_mornings(func), ms_to_elapse);
 

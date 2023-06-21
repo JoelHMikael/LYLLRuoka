@@ -139,9 +139,9 @@ If you need to troubleshoot the starting, you can find some logs in /tmp/slogs. 
 Currently the notifications have to be added manually to the MySQL database. Here's an example:
 ```
 USE lyllruoka;
-INSERT INTO exams VALUES ('2021-11-22', '2021-11-30', '<h2>Koeviikko</h2><br>22.11. - 30.11..<br>Kouluruokaa on tarjolla 10:45-11:30.');
+INSERT INTO exams VALUES ('2021-11-22', '2021-11-30', '<h2>Koeviikko</h2>22.11. - 30.11..<br>Kouluruokaa on tarjolla 10:45-11:30.');
 ```
-The first value in the parenthesis is the start date of the notification, the second the end date of the notification and the third value is the message to display. HTML is supported. The message will override the food shift search.
+The first value in the parenthesis is the start date of the notification, the second the end date of the notification and the third value is the message to display. HTML is supported. The message will override the food shift result.
 
 ## Updating the developer table
 
