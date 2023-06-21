@@ -18,13 +18,15 @@
 			<form method="POST">
 				<p class=shadow>Liitä allaolevaan tekstikenttään ruokailuvuorot (Wilma-viestin teksti):</p>
 				<br>
-				<textarea name="shifts" rows="24" style="text-align: left;"></textarea>
-				<br>
-				<p class="shadow">Kiitos paljon! Kun painat sivun lopusta 'Päivitä'-painiketta, toimii ruokailuvuorohaku (toivon mukaan) jälleen. Jos sinulla on yhtään enemmän aikaa, voit myös suorittaa allaolevan vaiheen. Sen suoritettuasi ruokailuvuoroja voi hakea opettajan ja kurssikoodin lisäksi luokkatilan perusteella.</p>
+				<textarea name="shifts" rows="24" style="text-align: left;">\(shifts\)</textarea>
 				<br>
 				<p class="shadow">Liitä allaolevaan tekstikenttään kurssitarjottimista tämä jakso. Voit avata kurssitarjottimet Excelissä tai Libreoffice Calcissa, valita alueen, jossa on jakson kurssit ja CTRL+C CTRL+V tähän. Toista sama kaikille jakson alueille kaikista vuoden kurssitarjottimista.</p>
 				<br>
-				<textarea name="classes" rows="24" style="text-align: left;"></textarea>
+				<textarea name="classes" rows="24" style="text-align: left;">\(classes\)</textarea>
+				<br>
+				<br>
+				<p class="shadow">Alta voit muokata ilmoituksia.</p>
+				<textarea name="exceptions" rows="16" style="text-align: left;">\(exceptions\)</textarea>
 				<br>
 				<input type="submit" id="send" class="highlight" value="Päivitä">
 				<br>
@@ -34,6 +36,8 @@
 
 		<footer>
 			<a href="https://www.github.com/JoelHMikael/LYLLRuoka">Lähdekoodi</a>
+			<span>|</span>
+			<a href="/panel">Hallintapaneeli</a>
 			<span>|</span>
 			<a href="/devs">Ota yhteyttä</a>
 		</footer>

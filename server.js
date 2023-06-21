@@ -2,6 +2,7 @@ const https	= require("https");
 const http	= require("http");
 const url	= require("url");
 const food	= require("./food.js");
+const fs        = require("node:fs/promises");
 const SQL_DBS	= require("./database.js");
 const DBPARSE	= require("./dbparse.js");
 const open	= require("./Functions/open.js");
@@ -9,13 +10,16 @@ const strFuncs	= require("./Functions/stringFuncs.js");
 const dateFuncs	= require("./Functions/dateFuncs.js");
 const updateDB  = require("./update.js");
 
+const SHIFTPATH = "../Updation/shifts.txt";
+const CLASSPATH = "../Updation/classes.txt";
+const EXCEPTIONPATH = "../Updation/exceptions.txt";
 
 async function init()
 {
 	const build = {
 		"./Cont/index.html": buildMain,
 		"./Cont/index.css": buildDefault,
-		"./Cont/updation/index.html": buildDefault,
+		"./Cont/panel/index.html": buildPanel,
 		"./Cont/devs/index.html": buildDevs,
 		"./Cont/devs/index.css": buildDefault,
 		"./Cont/404/index.css": buildDefault,
@@ -25,8 +29,6 @@ async function init()
 		"./Cont/Images/favicon.ico": buildImage,
 	};
 	const errorPath = "./Cont/404/index.html";
-        const SHIFTPATH = "../Updation/shifts.txt";
-        const CLASSPATH = "../Updation/classes.txt";
 
 	const startDate = new Date();
 	let visitorCount = 0;
@@ -50,7 +52,7 @@ async function init()
 
 	// Update...
 	// ...shifts and classes
-	await updateDB.update(SQLDB, SHIFTPATH, CLASSPATH);
+	await updateDB.update(SQLDB, SHIFTPATH, CLASSPATH, EXCEPTIONPATH);
 	// ...foods
 	dateFuncs.run_at_monday_mornings(() => food.build(SQLDB));
 	if ((new Date()).getDay() !== 1) // update if it's not monday. if it's monday, it has already been run by the scheduler above.
@@ -76,36 +78,51 @@ async function init()
 				let shifts = "";
 				let classes = "";
 				try {
-					shifts = decodeURIComponent(q.get("shifts")).replaceAll("+", " ");
-					classes = decodeURIComponent(q.get("classes")).replaceAll("+", " ");
+					shifts = decodeURIComponent(q.get("shifts")).replaceAll("+", " ").replaceAll('\r\n', '\n');
+					classes = decodeURIComponent(q.get("classes")).replaceAll("+", " ").replaceAll('\r\n', '\n');
+					exceptions = decodeURIComponent(q.get('exceptions').replaceAll("+", ' ')).replaceAll('\r\n', '\n');
 				} catch {
 					console.log("Malformed url, presumably");
 					res.writeHead(400);
-					res.end();
+					const cont = await buildCustomMessage("400: Virheellinen pyyntö", "Pyyntö sisälsi todennäköisesti merkkikoodeja, jotka eivät viittaa mihinkään olemassaolevaan merkkiin.");
+					res.end(cont);
+					return;
 				}
 				if (shifts === null || classes === null) {
 					res.writeHead(400);
-					res.end("Avainta 'shifts' ja/tai 'classes' ei löytynyt pyynnöstä.");
-				}
-				let shiftfile = await fs.open(SHIFTPATH, "w");
-				await shiftfile.write(shifts);
-				shiftfile.close();
-				if (classes != "") {
-					let classfile = await fs.open(CLASSPATH, "w");
-					await classfile.write(classes)
-					classfile.close();
-				}
-
-				try {
-					await updateDB.update(SQLDB, SHIFTPATH, CLASSPATH);
-				} catch(e) {
-					res.writeHead(400);
-					res.end("Virhe tietojen käsittelyssä. Ota yhteys kehittäjään.");
-					console.log(e);
+					const cont = await buildCustomMessage("400: Virheellinen pyyntö", "Avaimia 'shifts' ja/tai 'classes' ei löytynyt pyynnöstä");
+					res.end(cont);
 					return;
 				}
-				res.writeHead(200);
-				res.end("Kiitos paljon! Näyttää siltä, että tiedot saatiin päivitettyä.");
+				let shiftfile = await fs.open(`${SHIFTPATH}.tmp`, "w");
+				await shiftfile.write(shifts);
+				shiftfile.close();
+
+				let classfile = await fs.open(`${CLASSPATH}.tmp`, "w");
+				await classfile.write(classes)
+				classfile.close();
+
+				let exceptionfile = await fs.open(`${EXCEPTIONPATH}.tmp`, "w");
+				await exceptionfile.write(exceptions);
+				exceptionfile.close();
+
+				try {
+					await updateDB.update(SQLDB, `${SHIFTPATH}.tmp`, `${CLASSPATH}.tmp`, `${EXCEPTIONPATH}.tmp`);
+					await Promise.all([
+						fs.rename(`${SHIFTPATH}.tmp`, SHIFTPATH),
+						fs.rename(`${CLASSPATH}.tmp`, CLASSPATH),
+						fs.rename(`${EXCEPTIONPATH}.tmp`, EXCEPTIONPATH)
+					]);
+					res.writeHead(200);
+					const cont = await buildCustomMessage("Kiitos!", "Päivitysprosessi näyttää onnistuneen.");
+					res.end(cont);
+				} catch(e) {
+					console.log(e);
+					res.writeHead(400);
+					const cont = await buildCustomMessage("500: Virhe palvelimella", "Ruokailuvuorojen päivitysprosessi palautti virheen. Jos ruokailuvuorot on kirjoitettu jotenkin eri lailla kuin edellisissä viesteissä, selittynee virhe sillä. Jos pienellä muokkauksella et saa päivitystä toimimaan, ota yhteys kehittäjään.");
+					res.end(cont);
+					return;
+				}
 			});
 			return;
 		}
@@ -287,8 +304,8 @@ async function buildMain(args)
 		res["shift"] = "Kurssilla/opettajalla/luokalla ei ole ruokailua päivällä tai kurssia ei ole olemassa!";
 
 	// Show message if the normal schedule isn't in place
-	const examInfo = await SQLDB.query("SELECT * FROM exams");
-	for(let week = 0; week < examInfo.length; week++)
+	const exceptionInfo = await SQLDB.query("SELECT * FROM exceptions");
+	for(let week = 0; week < exceptionInfo.length; week++)
 	{
 		// get the date of the requested day
 		const nextDate = new Date(
@@ -299,11 +316,11 @@ async function buildMain(args)
 
 		if (dateFuncs.between(
 			nextDate,
-			new Date(examInfo[week].start),
-			new Date(examInfo[week].end)
+			new Date(exceptionInfo[week].start),
+			new Date(exceptionInfo[week].end)
 		))
 		{
-			const message = `<div class="shift-result float-block">${examInfo[week].message}</div>`;
+			const message = `<div class="shift-result float-block"><h2>${exceptionInfo[week].header}</h2>${(exceptionInfo[week].message.length > 0) ? '<br>' : ''}${exceptionInfo[week].message}</div>`;
 			data_string = strFuncs.replaceElement(data_string, "div id=\"shift-result\" class=\"float-block\"", message);
 		}
 	}
@@ -380,6 +397,26 @@ async function buildCustomMessage(header, message) {
 		.replace("\\(header\\)", header)
 		.replace("\\(content\\)", message);
 	return data;
+}
+
+async function buildPanel(args)
+{
+	let data = await open.file(args["path"]);
+	data = data.toString("utf-8");
+	
+	let shifts = await open.file(SHIFTPATH);
+	shifts = shifts.toString("utf-8");
+
+	let classes = await open.file(CLASSPATH);
+	classes = classes.toString("utf-8");
+
+	let exceptions = await open.file(EXCEPTIONPATH);
+	exceptions = exceptions.toString("utf-8");
+	return build_replace(data, {
+		"shifts": shifts,
+		"classes": classes,
+		"exceptions": exceptions
+	});
 }
 
 async function build404(args)

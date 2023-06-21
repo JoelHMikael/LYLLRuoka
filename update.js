@@ -1,6 +1,7 @@
-const openFile  = require("./Functions/open.js").file;
-const parseClasses  = require("./parseClasses.js").classes;
-const parse	= require("./dbparse.js");
+const openFile = require("./Functions/open.js").file;
+const parseClasses = require("./parseClasses.js").classes;
+const parse = require("./dbparse.js");
+const updateExceptions = require('./parseExceptions.js').updateExceptions;
 
 // Run this if you want to build the database from text files
 async function buildDB(dbconnection, shiftPath, classPath, exceptionPath) {

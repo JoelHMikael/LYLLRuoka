@@ -50,9 +50,10 @@ assert.deepEqual(
 async function updateExceptions(exceptions, DB) {
 	await DB.query_raw('DELETE FROM exceptions');
 	let dbOperations = [];
-	for (line of exceptions.split('\n')) {
-		if (line === '' || line[0] === '#')
-			continue
+	for (let line of exceptions.split('\n')) {
+		if ((line === '') || (line === '\r') || (line[0] === '#')) {
+			continue;
+		}
 		const [start, end, header, message] = parseLine(line);
 		dbOperations.push(DB.execute(
 			'INSERT INTO exceptions VALUE (?, ?, ?, ?)',
