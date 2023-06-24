@@ -2,15 +2,21 @@ const mysql = require("mysql2");
 
 class Database
 {
-	constructor(credentials)
+	constructor(credentials, connectionLimit=8)
 	{
-		this.connection = mysql.createConnection(credentials);
+		this.pool = mysql.createPool({
+			connectionLimit: connectionLimit,
+			host: credentials.host,
+			user: credentials.user,
+			password: credentials.password,
+			database: credentials.database
+		});
 	}
 	query(query, values)
 	{
 		return new Promise((resolve, reject) =>
 		{
-			this.connection.query(query, values, (err, res, fields) =>
+			this.pool.query(query, values, (err, res, fields) =>
 			{
 				if (err) reject(err);
 				resolve(res);
@@ -21,10 +27,13 @@ class Database
 	{
 		return new Promise((resolve, reject) =>
 		{
-			this.connection.execute(query, values, (err, res, fields) =>
-			{
+			this.pool.getConnection((err, connection) => {
 				if (err) reject(err);
-				resolve(res);
+				connection.execute(query, values, (err, res, fields) => {
+					connection.release();
+					if (err) reject(err);
+					resolve(res);
+				})
 			});
 		});
 
@@ -33,7 +42,7 @@ class Database
 	{
 		return new Promise((resolve, reject) =>
 		{
-			this.connection.query(query, (err, res, fields) =>
+			this.pool.query(query, (err, res, fields) =>
 			{
 				if (err)
 					reject(err)
@@ -45,7 +54,7 @@ class Database
 	{
 		return new Promise((resolve, reject) =>
 		{
-			this.connection.end(err =>
+			this.pool.end(err =>
 			{
 				if (err) reject(err);
 				resolve();
