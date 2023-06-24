@@ -9,7 +9,7 @@ const open	= require("./Functions/open.js");
 const strFuncs	= require("./Functions/stringFuncs.js");
 const dateFuncs	= require("./Functions/dateFuncs.js");
 const updateDB  = require("./update.js");
-const { createHash} = require("node:crypto");
+const { pbkdf2 } = require("./Functions/pbkdf2promise.js");
 
 const SHIFTPATH = "../Updation/shifts.txt";
 const CLASSPATH = "../Updation/classes.txt";
@@ -100,9 +100,15 @@ async function init()
 					return;
 				}
 
-				const hashObj = createHash("sha256");
-				hashObj.update(suppliedPassword);
-				let suppliedPassHash = hashObj.digest('hex');
+				
+				let suppliedPassHash = await pbkdf2(
+					suppliedPassword,
+					'salts protect from dictionary attacks, but we will have ~1 password.',
+					10000,
+					64,
+					'sha512',
+				);
+				suppliedPassHash = suppliedPassHash.toString('hex');
 				console.log(suppliedPassHash);
 				let passHashes = await open.file(PASSPATH);
 				passHashes = passHashes.toString('utf-8').split("\n");
