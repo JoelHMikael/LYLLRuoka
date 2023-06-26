@@ -44,8 +44,7 @@ class Database
 		{
 			this.pool.query(query, (err, res, fields) =>
 			{
-				if (err)
-					reject(err)
+				if (err) reject(err);
 				resolve(res);
 			});
 		})

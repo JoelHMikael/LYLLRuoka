@@ -82,9 +82,9 @@ async function init()
 				let exceptions = "";
 				let suppliedPassword = "";
 				try {
-					shifts = decodeURIComponent(q.get("shifts")).replaceAll("+", " ").replaceAll('\r\n', '\n');
-					classes = decodeURIComponent(q.get("classes")).replaceAll("+", " ").replaceAll('\r\n', '\n');
-					exceptions = decodeURIComponent(q.get('exceptions').replaceAll("+", ' ')).replaceAll('\r\n', '\n');
+					shifts = decodeURIComponent(q.get("shifts")).replaceAll('\r\n', '\n');
+					classes = decodeURIComponent(q.get("classes")).replaceAll('\r\n', '\n');
+					exceptions = decodeURIComponent(q.get('exceptions')).replaceAll('\r\n', '\n');
 					suppliedPassword = decodeURIComponent(q.get('password'));
 				} catch {
 					console.log("Malformed url, presumably");
@@ -109,7 +109,7 @@ async function init()
 					'sha512',
 				);
 				suppliedPassHash = suppliedPassHash.toString('hex');
-				console.log(suppliedPassHash);
+				//console.log(suppliedPassHash); // will be used to retrieve the password, because there's no way to register
 				let passHashes = await open.file(PASSPATH);
 				passHashes = passHashes.toString('utf-8').split("\n");
 				let match = false;
@@ -126,17 +126,17 @@ async function init()
 					return;
 				}
 
-				let shiftfile = await fs.open(`${SHIFTPATH}.tmp`, "w");
-				await shiftfile.write(shifts);
-				shiftfile.close();
+				let tmpshiftfile = await fs.open(`${SHIFTPATH}.tmp`, "w");
+				await tmpshiftfile.write(shifts);
+				tmpshiftfile.close();
 
-				let classfile = await fs.open(`${CLASSPATH}.tmp`, "w");
-				await classfile.write(classes)
-				classfile.close();
+				let tmpclassfile = await fs.open(`${CLASSPATH}.tmp`, "w");
+				await tmpclassfile.write(classes)
+				tmpclassfile.close();
 
-				let exceptionfile = await fs.open(`${EXCEPTIONPATH}.tmp`, "w");
-				await exceptionfile.write(exceptions);
-				exceptionfile.close();
+				let tmpexceptionfile = await fs.open(`${EXCEPTIONPATH}.tmp`, "w");
+				await tmpexceptionfile.write(exceptions);
+				tmpexceptionfile.close();
 
 				try {
 					await updateDB.update(SQLDB, `${SHIFTPATH}.tmp`, `${CLASSPATH}.tmp`, `${EXCEPTIONPATH}.tmp`);
@@ -151,8 +151,16 @@ async function init()
 				} catch(e) {
 					console.log(e);
 					res.writeHead(400);
-					const cont = await buildCustomMessage("500: Virhe palvelimella", "Ruokailuvuorojen päivitysprosessi palautti virheen. Jos ruokailuvuorot on kirjoitettu jotenkin eri lailla kuin edellisissä viesteissä, selittynee virhe sillä. Jos pienellä muokkauksella et saa päivitystä toimimaan, ota yhteys kehittäjään.");
+					let header = 'Päivityksessä tapahtui virhe';
+					let message = e.message;
+					let s = e.message.split(': ');
+					if (s.length === 2) {
+						header = s[0];
+						message = s[1];
+					}
+					const cont = await buildCustomMessage(header, message);
 					res.end(cont);
+					await updateDB.update(SQLDB, SHIFTPATH, CLASSPATH, EXCEPTIONPATH);
 					return;
 				}
 			});
@@ -337,6 +345,7 @@ async function buildMain(args)
 
 	// Show message if the normal schedule isn't in place
 	const exceptionInfo = await SQLDB.query("SELECT * FROM exceptions");
+	let messages = '';
 	for(let week = 0; week < exceptionInfo.length; week++)
 	{
 		// get the date of the requested day
@@ -352,10 +361,10 @@ async function buildMain(args)
 			new Date(exceptionInfo[week].end)
 		))
 		{
-			const message = `<div class="shift-result float-block"><h2>${exceptionInfo[week].header}</h2>${(exceptionInfo[week].message.length > 0) ? '<br>' : ''}${exceptionInfo[week].message}</div>`;
-			data_string = strFuncs.replaceElement(data_string, "div id=\"shift-result\" class=\"float-block\"", message);
+			messages = `<div class="shift-result float-block"><h2>${exceptionInfo[week].header}</h2>${(exceptionInfo[week].message.length > 0) ? '<br>' : ''}${exceptionInfo[week].message}</div>\n<br>\n` + messages;
 		}
 	}
+	data_string = strFuncs.replaceElement(data_string, "div id=\"shift-result\" class=\"float-block\"", messages);
 
 	// get the example input
 	res["example-input"] = await DBPARSE.randomIndex(day, SQLDB);

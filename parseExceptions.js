@@ -8,25 +8,29 @@ function parseLine(line) {
 	let dateStrings = datePart.split('-');
 	if (dateStrings.length === 1)
 		dateStrings.push(dateStrings[0]);
-	assert.equal(dateStrings.length, 2, `päivämääräväli ${datePart} on virheellinen (ks. rivi ${line})`);
+	assert.equal(dateStrings.length, 2, `päivämääräväli ”${datePart}” on virheellinen (ks. rivi ”${line}”)`);
 	let d1   = dateStrings[0].split('.');
 	const d2 = dateStrings[1].split('.');
 	assert.equal(d2.length, 3, `päivämäärästä ”${dateStrings[1]}”  puuttui päivä, kuukausi tai vuosi tai se on muutoin virheellinen (ks. rivi ”${line}”)`);
+	if (d1[d1.length - 1].length === 0) {
+		d1.pop();
+	}
 	while (d1.length < 3) {
 		d1.push(d2[d1.length])
 	}
 	for (let i = 0; i < 3; i++) {
-		d1[i] = +d1[i];
-		d2[i] = +d2[i];
+		d1[i] = parseInt(d1[i]);
+		d2[i] = parseInt(d2[i]);
 		let opts = ['päivä', 'kuukausi', 'vuosi'];
-		assert.ok(!isNaN(d1[i]), `syötetty ${opts[i]} ei koostunut pelkistä numeroista (ks. rivi ${line})`);
-		assert.ok(!isNaN(d2[i]), `syötetty ${opts[i]} ei koostunut pelkistä numeroista (ks. rivi ${line})`);
+		assert.ok(!isNaN(d1[i]), `syötetty ”${opts[i]}“ ei koostunut pelkistä numeroista tai numeroita ei ollut tarpeeksi (ks. rivi ”${line}”)`);
+		assert.ok(!isNaN(d2[i]), `syötetty ”${opts[i]}” ei koostunut pelkistä numeroista tai numeroita ei ollut tarpeeksi (ks. rivi ”${line}”)`);
 	}
 	const start = new Date(d1[2], d1[1] - 1, d1[0]);
 	const end = new Date(d2[2], d2[1] - 1, d2[0]);
+	assert(start <= end, `Ilmoituksen ensimmäisen päivämäärän ”${dateStrings[0]}” tulee olla ennen toista päivämäärää ”${dateStrings[1]}” (ks. rivi ”${line}”)`);
  
 	let [header, message = ''] = rest.split('|', 2);
-	assert.equal(header === undefined, false, 'otsikko täytyy antaa (ks. rivi ${line})');
+	assert((header !== undefined) && (header.length !== 0), `otsikko täytyy antaa (ks. rivi ”${line}”)`);
 	header = header.trimEnd();
 	message = message.trimStart();
  

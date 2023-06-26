@@ -14,9 +14,21 @@ async function buildDB(dbconnection, shiftPath, classPath, exceptionPath) {
 	let classes = await openFile(classPath);
 	classes = classes.toString('utf-8');
 
-	await parseClasses(dbconnection, classes);
-        await parse.build(shiftCont, dbconnection);
-        await updateExceptions(exceptions, dbconnection);
+	try {
+		await parseClasses(dbconnection, classes);
+	} catch (e) {
+		throw new Error(`Virhe kurssitarjottimen osassa: ${e.message}`, { cause: e });
+	}
+	try {
+		await parse.build(shiftCont, dbconnection);
+	} catch (e) {
+		throw new Error(`Virhe ruokailuvuoroissa: ${e.message}`, { cause: e });
+	}
+	try {
+		await updateExceptions(exceptions, dbconnection);
+	} catch (e) {
+		throw new Error(`Virhe ilmoituksissa: ${e.message}`, { cause: e });
+	}
 
 	return 0;
 }
